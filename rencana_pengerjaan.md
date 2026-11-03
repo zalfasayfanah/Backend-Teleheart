@@ -149,19 +149,22 @@ Kerjakan **satu tahap demi satu tahap**. Jangan melompat ke tahap berikutnya seb
 
 ---
 
-### 🟢 Fase 5: Modul Konsultasi & Evaluasi Tanda Vital
+### 🟢 Fase 5: Modul Konsultasi & Evaluasi Tanda Vital ✅ *(Selesai)*
 > **Tujuan:** Pasien membuat draft konsultasi, memasukkan tanda vital, dan mendapatkan status peringatan darurat.
 
-- [ ] **Task 5.1: Evaluator Tanda Vital (Early Warning System)**
+- [x] **Task 5.1: Evaluator Tanda Vital (Early Warning System)**
   - Buat logika pemeriksaan tanda vital di `src/modules/consultations/vitalSignsEvaluator.ts` (sesuai ambang batas medis di PRD: tekanan darah sistolik/diastolik, denyut nadi, SpO2).
   - Tentukan kategori: `normal`, `warning`, atau `critical` beserta rekomendasi darurat.
-- [ ] **Task 5.2: Pembuatan Konsultasi (Draft & Checkout)**
+- [x] **Task 5.2: Pembuatan Konsultasi (Draft & Checkout)**
   - Buat `src/modules/consultations/`.
-  - `POST /api/v1/consultations`: Pasien memilih dokter, mengisi keluhan dan tanda vital. Status awal: `draft` atau langsung `waiting_payment`.
+  - `POST /api/v1/consultations`: Pasien memilih dokter, mengisi keluhan dan durasi paket. Status awal: `draft`.
+  - `POST /api/v1/consultations/:id/vitals`: Pasien mengisi tanda vital awal dan mendapatkan hasil evaluasi early warning (`normal`, `warning`, `critical`).
   - Validasi aturan: Pasien tidak boleh memiliki konsultasi berjalan yang belum selesai.
-  - Hitung snapshot biaya: `total_amount = doctor_fee + platform_fee`.
-  - `GET /api/v1/consultations/:id`: Melihat detail konsultasi.
+  - Snapshot biaya otomatis: `doctor_fee`, `platform_fee`, `total_amount`.
+  - `GET /api/v1/consultations/:id`: Melihat detail konsultasi beserta tanda vital.
   - `GET /api/v1/consultations`: Riwayat konsultasi pasien/dokter.
+  - `POST /api/v1/consultations/:id/cancel`: Membatalkan konsultasi draft.
+  - **Uji coba:** 9 unit & integration tests lolos (total 67 tests passing).
 
 ---
 
