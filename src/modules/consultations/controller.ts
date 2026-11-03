@@ -32,6 +32,16 @@ export class ConsultationController {
     }
   }
 
+  static async checkout(req: Request, res: Response, next: NextFunction) {
+    try {
+      const consultationId = req.params.id as string;
+      const data = await ConsultationService.checkout(consultationId, req.user!.id, req.body);
+      return sendSuccess(res, data, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getConsultationDetail(req: Request, res: Response, next: NextFunction) {
     try {
       const consultationId = req.params.id as string;

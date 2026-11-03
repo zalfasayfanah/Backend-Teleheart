@@ -1,8 +1,18 @@
 import { z } from "zod";
 
 export const createConsultationSchema = z.object({
+  doctor_id: z.string().uuid().optional(),
+  duration_minutes: z.union([z.literal(15), z.literal(30), z.literal(60)]).optional(),
   complaint: z.string().optional(),
+  patient_notes: z.string().optional(),
 });
+
+export const checkoutSchema = z.object({
+  doctor_id: z.string().uuid().optional(),
+  duration_minutes: z.union([z.literal(15), z.literal(30), z.literal(60)]).optional(),
+});
+
+export type CheckoutInput = z.infer<typeof checkoutSchema>;
 
 export const submitVitalsSchema = z.object({
   systolic: z.coerce.number().int().min(40, "Sistolik minimal 40").max(300, "Sistolik maksimal 300"),

@@ -10,6 +10,7 @@ import {
   platformFeeRouter,
 } from "./modules/doctors/routes.js";
 import consultationRouter from "./modules/consultations/routes.js";
+import webhookRouter from "./modules/payments/routes.js";
 import { AuthController } from "./modules/auth/controller.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { errorHandler, AppError } from "./middleware/errorHandler.js";
@@ -43,6 +44,7 @@ apiV1Router.use("/doctors", doctorRouter);
 apiV1Router.use("/admin/doctors", adminDoctorRouter);
 apiV1Router.use("/platform-fee", platformFeeRouter);
 apiV1Router.use("/consultations", consultationRouter);
+apiV1Router.use("/webhooks", webhookRouter);
 apiV1Router.get("/me", authMiddleware, AuthController.getMe);
 
 // Pasang /api/v1 ke Express

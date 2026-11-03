@@ -1,7 +1,9 @@
 import { supabaseAdmin } from "../../lib/supabase.js";
 import { AppError } from "../../middleware/errorHandler.js";
 import { evaluateVitalSigns } from "./vitalSignsEvaluator.js";
-import { CreateConsultationInput, SubmitVitalsInput } from "./schema.js";
+import { CreateConsultationInput, SubmitVitalsInput, CheckoutInput } from "./schema.js";
+import { mayarClient } from "../../lib/mayar.js";
+import { env } from "../../config/env.js";
 
 export class ConsultationService {
   /**
@@ -26,15 +28,49 @@ export class ConsultationService {
       );
     }
 
+    let doctorFee = 0;
+    let platformFee = 0;
+    let totalAmount = 0;
+    const duration = input.duration_minutes || 15;
+
+    // Jika dokter dipilih dari awal, hitung snapshot tarifnya
+    if (input.doctor_id) {
+      const { data: tariff } = await supabaseAdmin
+        .from("doctor_tariffs")
+        .select("price")
+        .eq("doctor_id", input.doctor_id)
+        .eq("duration_minutes", duration)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      doctorFee = tariff?.price ?? 50000;
+
+      const { data: fee } = await supabaseAdmin
+        .from("platform_fees")
+        .select("amount")
+        .lte("effective_from", new Date().toISOString())
+        .order("effective_from", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      platformFee = fee?.amount ?? 5000;
+      totalAmount = doctorFee + platformFee;
+    }
+
     // 2. Buat konsultasi baru dengan status draft
     const { data: newConsultation, error } = await supabaseAdmin
       .from("consultations")
       .insert({
         patient_id: patientId,
-        complaint: input.complaint || null,
+        doctor_id: input.doctor_id || null,
+        duration_minutes: duration,
+        doctor_fee: doctorFee,
+        platform_fee: platformFee,
+        total_amount: totalAmount,
+        complaint: input.complaint || input.patient_notes || null,
         status: "draft",
       })
-      .select("id, status")
+      .select("id, status, doctor_id, duration_minutes, doctor_fee, platform_fee, total_amount, complaint")
       .single();
 
     if (error || !newConsultation) {
@@ -207,6 +243,15 @@ export class ConsultationService {
       .eq("consultation_id", consultationId)
       .maybeSingle();
 
+    // Ambil data pembayaran jika ada
+    const { data: payment } = await supabaseAdmin
+      .from("payments")
+      .select("id, mayar_payment_id, payment_url, amount, status, payment_method, expires_at, paid_at")
+      .eq("consultation_id", consultationId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
     // Ambil info dokter jika sudah dipilih
     let doctorInfo = null;
     if (cons.doctor_id) {
@@ -236,6 +281,209 @@ export class ConsultationService {
       ...cons,
       doctor: doctorInfo,
       vital_signs: vitals || null,
+      payment: payment || null,
+    };
+  }
+
+  /**
+   * Pasien Melakukan Checkout Pembayaran Konsultasi (Integrasi Mayar)
+   */
+  static async checkout(consultationId: string, patientId: string, input?: CheckoutInput) {
+    // 1. Ambil data konsultasi
+    const { data: consultation, error: consError } = await supabaseAdmin
+      .from("consultations")
+      .select("*")
+      .eq("id", consultationId)
+      .maybeSingle();
+
+    if (consError || !consultation) {
+      throw new AppError(404, "NOT_FOUND", "Konsultasi tidak ditemukan");
+    }
+
+    if (consultation.patient_id !== patientId) {
+      throw new AppError(403, "FORBIDDEN", "Anda bukan pemilik sesi konsultasi ini");
+    }
+
+    if (consultation.status !== "draft" && consultation.status !== "waiting_payment") {
+      throw new AppError(
+        400,
+        "INVALID_STATE",
+        `Tidak dapat checkout konsultasi dengan status '${consultation.status}'`
+      );
+    }
+
+    // 2. Cek kelengkapan tanda vital (Tanda vital wajib diisi sebelum pembayaran)
+    const { data: vitals } = await supabaseAdmin
+      .from("vital_signs")
+      .select("id")
+      .eq("consultation_id", consultationId)
+      .maybeSingle();
+
+    if (!vitals) {
+      throw new AppError(
+        400,
+        "VITALS_REQUIRED",
+        "Harap isi tanda vital terlebih dahulu sebelum melakukan pembayaran"
+      );
+    }
+
+    // 3. Tentukan Dokter & Durasi
+    const doctorId = input?.doctor_id || consultation.doctor_id;
+    const duration = input?.duration_minutes || consultation.duration_minutes || 15;
+
+    if (!doctorId) {
+      throw new AppError(400, "DOCTOR_REQUIRED", "Harap pilih dokter terlebih dahulu");
+    }
+
+    // Periksa ketersediaan dokter
+    const { data: doctorProfile } = await supabaseAdmin
+      .from("doctor_profiles")
+      .select("verification_status, is_online, specialization")
+      .eq("user_id", doctorId)
+      .maybeSingle();
+
+    if (!doctorProfile || doctorProfile.verification_status !== "approved") {
+      throw new AppError(400, "DOCTOR_NOT_APPROVED", "Dokter yang dipilih belum diverifikasi oleh admin");
+    }
+
+    if (!doctorProfile.is_online) {
+      throw new AppError(400, "DOCTOR_OFFLINE", "Dokter sedang offline, silakan pilih dokter lain");
+    }
+
+    // 4. Hitung snapshot tarif
+    const { data: tariff } = await supabaseAdmin
+      .from("doctor_tariffs")
+      .select("price")
+      .eq("doctor_id", doctorId)
+      .eq("duration_minutes", duration)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    const doctorFee = tariff?.price ?? 50000;
+
+    const { data: platformFeeRecord } = await supabaseAdmin
+      .from("platform_fees")
+      .select("amount")
+      .lte("effective_from", new Date().toISOString())
+      .order("effective_from", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const platformFee = platformFeeRecord?.amount ?? 5000;
+    const totalAmount = doctorFee + platformFee;
+
+    // 5. Ambil data pasien untuk Mayar invoice
+    const { data: patientUser } = await supabaseAdmin
+      .from("users")
+      .select("full_name, email")
+      .eq("id", patientId)
+      .single();
+
+    const { data: patientProfile } = await supabaseAdmin
+      .from("patient_profiles")
+      .select("phone")
+      .eq("user_id", patientId)
+      .maybeSingle();
+
+    // 6. Buat invoice Mayar
+    const invoice = await mayarClient.createInvoice({
+      consultationId: consultation.id,
+      amount: totalAmount,
+      customerName: patientUser?.full_name || "Pasien TeleHeart",
+      customerEmail: patientUser?.email || "pasien@teleheart.id",
+      customerMobile: patientProfile?.phone || undefined,
+      description: `Konsultasi Spesialis Jantung (${duration} Menit)`,
+      items: [
+        {
+          description: `Jasa Dokter Spesialis Jantung (${duration} Menit)`,
+          quantity: 1,
+          rate: doctorFee,
+        },
+        {
+          description: "Biaya Layanan Platform TeleHeart",
+          quantity: 1,
+          rate: platformFee,
+        },
+      ],
+    });
+
+    // 7. Simpan ke tabel payments
+    const expiresAt = typeof invoice.expiredAt === "number"
+      ? new Date(invoice.expiredAt).toISOString()
+      : (invoice.expiredAt || new Date(Date.now() + env.PAYMENT_INVOICE_TTL_MINUTES * 60 * 1000).toISOString());
+
+    // Cek apakah payment sudah ada sebelumnya
+    const { data: existingPayment } = await supabaseAdmin
+      .from("payments")
+      .select("id")
+      .eq("consultation_id", consultationId)
+      .maybeSingle();
+
+    let paymentRecord;
+    if (existingPayment) {
+      const { data: updatedPay, error: payUpdateErr } = await supabaseAdmin
+        .from("payments")
+        .update({
+          mayar_payment_id: invoice.id,
+          payment_url: invoice.paymentUrl,
+          amount: totalAmount,
+          status: "pending",
+          expires_at: expiresAt,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingPayment.id)
+        .select()
+        .single();
+
+      if (payUpdateErr) {
+        throw new AppError(500, "DATABASE_ERROR", "Gagal memperbarui status pembayaran");
+      }
+      paymentRecord = updatedPay;
+    } else {
+      const { data: newPay, error: payInsertErr } = await supabaseAdmin
+        .from("payments")
+        .insert({
+          consultation_id: consultationId,
+          mayar_payment_id: invoice.id,
+          payment_url: invoice.paymentUrl,
+          amount: totalAmount,
+          status: "pending",
+          expires_at: expiresAt,
+        })
+        .select()
+        .single();
+
+      if (payInsertErr || !newPay) {
+        throw new AppError(500, "DATABASE_ERROR", "Gagal mencatat data pembayaran");
+      }
+      paymentRecord = newPay;
+    }
+
+    // 8. Update konsultasi: status -> waiting_payment
+    await supabaseAdmin
+      .from("consultations")
+      .update({
+        doctor_id: doctorId,
+        duration_minutes: duration,
+        doctor_fee: doctorFee,
+        platform_fee: platformFee,
+        total_amount: totalAmount,
+        status: "waiting_payment",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", consultationId);
+
+    return {
+      consultation_id: consultationId,
+      payment_id: paymentRecord.id,
+      mayar_invoice_id: invoice.id,
+      payment_url: invoice.paymentUrl,
+      amount: totalAmount,
+      doctor_fee: doctorFee,
+      platform_fee: platformFee,
+      duration_minutes: duration,
+      status: "waiting_payment",
+      expires_at: expiresAt,
     };
   }
 

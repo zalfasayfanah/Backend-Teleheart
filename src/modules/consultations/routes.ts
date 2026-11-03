@@ -3,7 +3,7 @@ import { ConsultationController } from "./controller.js";
 import { authMiddleware } from "../../middleware/auth.js";
 import { requireRole } from "../../middleware/requireRole.js";
 import { validate } from "../../middleware/validate.js";
-import { createConsultationSchema, submitVitalsSchema } from "./schema.js";
+import { createConsultationSchema, submitVitalsSchema, checkoutSchema } from "./schema.js";
 
 const consultationRouter = Router();
 
@@ -24,6 +24,14 @@ consultationRouter.post(
   requireRole("patient"),
   validate({ body: submitVitalsSchema }),
   ConsultationController.submitVitals
+);
+
+// Pasien melakukan checkout pembayaran via Mayar
+consultationRouter.post(
+  "/:id/checkout",
+  requireRole("patient"),
+  validate({ body: checkoutSchema }),
+  ConsultationController.checkout
 );
 
 // Pasien membatalkan konsultasi (hanya draft atau waiting_payment)

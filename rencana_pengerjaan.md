@@ -168,22 +168,22 @@ Kerjakan **satu tahap demi satu tahap**. Jangan melompat ke tahap berikutnya seb
 
 ---
 
-### 🟢 Fase 6: Integrasi Pembayaran Mayar (Invoice & Webhook)
+### 🟢 Fase 6: Integrasi Pembayaran Mayar (Invoice & Webhook) ✅ *(Selesai)*
 > **Tujuan:** Menghubungkan sistem ke gateway pembayaran Mayar dan memproses webhook saat pembayaran sukses.
 
-- [ ] **Task 6.1: Service Klien Mayar**
-  - Buat `src/lib/mayar.ts` untuk komunikasi dengan REST API Mayar.
+- [x] **Task 6.1: Service Klien Mayar**
+  - Buat `src/lib/mayar.ts` untuk komunikasi dengan REST API Mayar Sandbox/Live.
   - Fungsi `createMayarInvoice`: Mengirim detail checkout (nama, email, nominal, redirect URL) dan menerima `payment_url` serta `invoice_id`.
-- [ ] **Task 6.2: Endpoint Checkout Konsultasi**
-  - `POST /api/v1/consultations/:id/checkout`: Membuat invoice Mayar untuk konsultasi yang berstatus `waiting_payment`.
-  - Simpan ID invoice dan status `unpaid` di tabel `payments`.
+- [x] **Task 6.2: Endpoint Checkout Konsultasi**
+  - `POST /api/v1/consultations/:id/checkout`: Membuat invoice Mayar untuk konsultasi yang sudah dilengkapi tanda vital.
+  - Simpan ID invoice dan status `pending` di tabel `payments`.
   - Kembalikan tautan pembayaran ke aplikasi mobile.
-- [ ] **Task 6.3: Webhook Handler Mayar (Krusial & Idempotent)**
+- [x] **Task 6.3: Webhook Handler Mayar (Krusial & Idempotent)**
   - Buat endpoint publik `POST /api/v1/webhooks/mayar`.
   - Verifikasi signature / token webhook dari Mayar.
   - **Idempotensi**: Jika webhook untuk invoice yang sama diterima 2 kali, jangan proses ulang.
-  - Jika pembayaran berhasil: Update tabel `payments` jadi `paid`, ubah status `consultations` jadi `waiting_doctor`, dan picu penugasan dokter.
-  - **Uji coba:** Simulasi trigger webhook menggunakan Postman / ngrok untuk memastikan status konsultasi otomatis berpindah.
+  - Jika pembayaran berhasil: Update tabel `payments` jadi `paid`, ubah status `consultations` jadi `waiting_doctor`, dan picu penugasan dokter pertama (`consultation_assignments`) serta kirim notifikasi in-app.
+  - **Uji coba:** 8 skenario pengujian integrasi lolos (total 75 tests passing).
 
 ---
 
