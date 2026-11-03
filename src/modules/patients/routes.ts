@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { PatientController } from "./controller.js";
+import { ConsultationController } from "../consultations/controller.js";
 import { authMiddleware } from "../../middleware/auth.js";
 import { requireRole } from "../../middleware/requireRole.js";
 import { validate } from "../../middleware/validate.js";
@@ -89,6 +90,9 @@ patientRouter.delete(
 
 // Akses Profil Pasien oleh Dokter (Hanya role: doctor)
 patientRouter.get("/:id/profile", requireRole("doctor"), PatientController.getPatientProfileByDoctor);
+
+// Akses Riwayat Konsultasi & Medis Pasien oleh Dokter (Hanya role: doctor, tanpa isi chat)
+patientRouter.get("/:id/history", requireRole("doctor"), ConsultationController.getPatientHistoryForDoctor);
 
 export default patientRouter;
 

@@ -187,21 +187,24 @@ Kerjakan **satu tahap demi satu tahap**. Jangan melompat ke tahap berikutnya seb
 
 ---
 
-### 🟢 Fase 7: Alur Penugasan Dokter, Timeout & Siklus Konsultasi
+### 🟢 Fase 7: Alur Penugasan Dokter, Timeout & Siklus Konsultasi ✅ *(Selesai)*
 > **Tujuan:** Mengatur giliran dokter menerima konsultasi (15 menit timeout) hingga sesi berakhir.
 
-- [ ] **Task 7.1: Antrean & Penerimaan oleh Dokter**
-  - `GET /api/v1/doctors/me/queue`: Menampilkan permintaan konsultasi yang masuk ke dokter.
-  - `POST /api/v1/consultations/:id/accept`: Dokter menerima konsultasi. Status berubah menjadi `active`, waktu mulai dicatat.
-  - `POST /api/v1/consultations/:id/reject`: Dokter menolak konsultasi, cari dokter pengganti.
-- [ ] **Task 7.2: Scheduled Function / Job Pemantau (jobs-tick)**
+- [x] **Task 7.1: Antrean & Penerimaan oleh Dokter**
+  - `GET /api/v1/doctors/me/queue`: Menampilkan permintaan konsultasi yang masuk (`type=incoming`) dan aktif (`type=active`).
+  - `POST /api/v1/consultations/:id/accept`: Dokter menerima konsultasi. Status berubah menjadi `active`, timer mulai berjalan (`started_at`, `expires_at`, `remaining_seconds`).
+  - `POST /api/v1/consultations/:id/reject`: Dokter menolak konsultasi, cari dokter pengganti secara otomatis.
+- [x] **Task 7.2: Scheduled Function / Job Pemantau (jobs-tick)**
   - Buat logika di `src/jobs/consultationTimeoutJob.ts`:
     - Cek konsultasi `waiting_doctor` yang lebih dari 15 menit belum di-accept dokter.
     - Oper ke dokter lain (maksimal 3 kali reassign) atau batalkan dan proses refund.
-    - Cek konsultasi `active` yang sudah melewati durasi (misal 30 menit) untuk ditutup otomatis.
-  - Sambungkan ke `netlify/functions/jobs-tick.ts`.
-- [ ] **Task 7.3: Penutupan Konsultasi**
-  - `POST /api/v1/consultations/:id/close`: Dokter mengakhiri konsultasi setelah diagnosis selesai. Status berubah menjadi `closed`.
+    - Cek konsultasi `active` yang sudah melewati durasi untuk ditutup otomatis (`duration_expired`).
+  - `POST /api/v1/jobs/check-timeouts`: Endpoint pemantau job yang dilindungi `JOBS_SECRET`.
+  - Sambungkan ke Netlify Function `netlify/functions/jobs-tick.ts`.
+- [x] **Task 7.3: Penutupan Konsultasi & Riwayat Medis Pasien**
+  - `POST /api/v1/consultations/:id/close`: Dokter mengakhiri konsultasi setelah diagnosis selesai beserta ringkasan medis (`doctor_summary`). Status berubah menjadi `closed`.
+  - `GET /api/v1/patients/:id/history`: Dokter melihat riwayat rekam medis, tanda vital, dan resep pasien terdahulu dengan privasi terjaga (tanpa isi chat).
+  - **Uji coba:** 12 skenario pengujian integrasi lolos (total 87 tests passing).
 
 ---
 

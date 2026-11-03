@@ -3,7 +3,13 @@ import { ConsultationController } from "./controller.js";
 import { authMiddleware } from "../../middleware/auth.js";
 import { requireRole } from "../../middleware/requireRole.js";
 import { validate } from "../../middleware/validate.js";
-import { createConsultationSchema, submitVitalsSchema, checkoutSchema } from "./schema.js";
+import {
+  createConsultationSchema,
+  submitVitalsSchema,
+  checkoutSchema,
+  closeConsultationSchema,
+  rejectConsultationSchema,
+} from "./schema.js";
 
 const consultationRouter = Router();
 
@@ -39,6 +45,29 @@ consultationRouter.post(
   "/:id/cancel",
   requireRole("patient"),
   ConsultationController.cancelConsultation
+);
+
+// Dokter menerima konsultasi (waiting_doctor -> active)
+consultationRouter.post(
+  "/:id/accept",
+  requireRole("doctor"),
+  ConsultationController.acceptConsultation
+);
+
+// Dokter menolak konsultasi (waiting_doctor -> reassign)
+consultationRouter.post(
+  "/:id/reject",
+  requireRole("doctor"),
+  validate({ body: rejectConsultationSchema }),
+  ConsultationController.rejectConsultation
+);
+
+// Dokter menutup konsultasi (active -> closed)
+consultationRouter.post(
+  "/:id/close",
+  requireRole("doctor"),
+  validate({ body: closeConsultationSchema }),
+  ConsultationController.closeConsultation
 );
 
 // Pasien / Dokter melihat daftar konsultasi

@@ -64,5 +64,57 @@ export class ConsultationController {
       next(error);
     }
   }
+
+  static async getDoctorQueue(req: Request, res: Response, next: NextFunction) {
+    try {
+      const type = (req.query.type as "incoming" | "active") || "incoming";
+      const data = await ConsultationService.getDoctorQueue(req.user!.id, type);
+      return sendSuccess(res, data, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async acceptConsultation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const consultationId = req.params.id as string;
+      const data = await ConsultationService.acceptConsultation(consultationId, req.user!.id);
+      return sendSuccess(res, data, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async rejectConsultation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const consultationId = req.params.id as string;
+      const reason = req.body?.reason;
+      const data = await ConsultationService.rejectConsultation(consultationId, req.user!.id, reason);
+      return sendSuccess(res, data, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async closeConsultation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const consultationId = req.params.id as string;
+      const doctorSummary = req.body?.doctor_summary;
+      const data = await ConsultationService.closeConsultation(consultationId, req.user!.id, doctorSummary);
+      return sendSuccess(res, data, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getPatientHistoryForDoctor(req: Request, res: Response, next: NextFunction) {
+    try {
+      const patientId = req.params.id as string;
+      const data = await ConsultationService.getPatientHistoryForDoctor(patientId, req.user!.id);
+      return sendSuccess(res, data, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 

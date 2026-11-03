@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { DoctorController } from "./controller.js";
+import { ConsultationController } from "../consultations/controller.js";
 import { authMiddleware } from "../../middleware/auth.js";
 import { requireRole } from "../../middleware/requireRole.js";
 import { validate } from "../../middleware/validate.js";
@@ -15,6 +16,7 @@ export const doctorRouter = Router();
 
 // Sisi Dokter Sendiri (Perlu Autentikasi Dokter)
 // NOTE: Letakkan route /me/... LEBIH DULU daripada /:id agar tidak tertelan sebagai parameter ID
+doctorRouter.get("/me/queue", authMiddleware, requireRole("doctor"), ConsultationController.getDoctorQueue);
 doctorRouter.get("/me/profile", authMiddleware, requireRole("doctor"), DoctorController.getOwnProfile);
 doctorRouter.put(
   "/me/profile",

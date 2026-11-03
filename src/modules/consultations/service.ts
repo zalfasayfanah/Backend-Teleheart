@@ -277,8 +277,14 @@ export class ConsultationService {
       }
     }
 
+    let remainingSeconds = null;
+    if (cons.status === "active" && cons.expires_at) {
+      remainingSeconds = Math.max(0, Math.floor((new Date(cons.expires_at).getTime() - Date.now()) / 1000));
+    }
+
     return {
       ...cons,
+      remaining_seconds: remainingSeconds,
       doctor: doctorInfo,
       vital_signs: vitals || null,
       payment: payment || null,
@@ -508,6 +514,639 @@ export class ConsultationService {
     }
 
     return data || [];
+  }
+
+  /**
+   * Antrean Konsultasi Dokter (type = 'incoming' | 'active')
+   */
+  static async getDoctorQueue(doctorId: string, type: "incoming" | "active" = "incoming") {
+    if (type === "incoming") {
+      // 1. Ambil penugasan berstatus 'offered' untuk dokter ini
+      const { data: assignments, error: assignErr } = await supabaseAdmin
+        .from("consultation_assignments")
+        .select("consultation_id, deadline_at, status")
+        .eq("doctor_id", doctorId)
+        .eq("status", "offered");
+
+      if (assignErr) {
+        throw new AppError(500, "DATABASE_ERROR", "Gagal mengambil antrean penugasan dokter");
+      }
+
+      if (!assignments || assignments.length === 0) {
+        return [];
+      }
+
+      const consultationIds = assignments.map((a) => a.consultation_id);
+
+      // 2. Ambil data konsultasi yang berstatus 'waiting_doctor'
+      const { data: consultations, error: consErr } = await supabaseAdmin
+        .from("consultations")
+        .select("id, patient_id, duration_minutes, complaint, response_deadline_at, status")
+        .in("id", consultationIds)
+        .eq("status", "waiting_doctor");
+
+      if (consErr) {
+        throw new AppError(500, "DATABASE_ERROR", "Gagal mengambil antrean konsultasi");
+      }
+
+      const results = [];
+      for (const cons of consultations || []) {
+        const assign = assignments.find((a) => a.consultation_id === cons.id);
+
+        // Ambil info pasien
+        const { data: patientUser } = await supabaseAdmin
+          .from("users")
+          .select("id, full_name")
+          .eq("id", cons.patient_id)
+          .maybeSingle();
+
+        const { data: patientProfile } = await supabaseAdmin
+          .from("patient_profiles")
+          .select("birth_date, gender")
+          .eq("user_id", cons.patient_id)
+          .maybeSingle();
+
+        // Ambil tanda vital
+        const { data: vitals } = await supabaseAdmin
+          .from("vital_signs")
+          .select("systolic, diastolic, heart_rate, spo2, is_emergency, measured_at")
+          .eq("consultation_id", cons.id)
+          .maybeSingle();
+
+        results.push({
+          consultation_id: cons.id,
+          patient: {
+            id: patientUser?.id,
+            full_name: patientUser?.full_name,
+            birth_date: patientProfile?.birth_date || null,
+            gender: patientProfile?.gender || null,
+          },
+          duration_minutes: cons.duration_minutes,
+          is_emergency: vitals?.is_emergency ?? false,
+          complaint: cons.complaint,
+          vitals: vitals
+            ? {
+                systolic: vitals.systolic,
+                diastolic: vitals.diastolic,
+                heart_rate: vitals.heart_rate,
+                spo2: vitals.spo2,
+                measured_at: vitals.measured_at,
+              }
+            : null,
+          response_deadline_at: assign?.deadline_at || cons.response_deadline_at,
+        });
+      }
+
+      return results;
+    } else {
+      // type === 'active'
+      const { data: activeCons, error: actErr } = await supabaseAdmin
+        .from("consultations")
+        .select("id, patient_id, duration_minutes, complaint, started_at, expires_at, status")
+        .eq("doctor_id", doctorId)
+        .eq("status", "active")
+        .order("started_at", { ascending: false });
+
+      if (actErr) {
+        throw new AppError(500, "DATABASE_ERROR", "Gagal mengambil konsultasi aktif dokter");
+      }
+
+      const results = [];
+      for (const cons of activeCons || []) {
+        const { data: patientUser } = await supabaseAdmin
+          .from("users")
+          .select("id, full_name")
+          .eq("id", cons.patient_id)
+          .maybeSingle();
+
+        const { data: patientProfile } = await supabaseAdmin
+          .from("patient_profiles")
+          .select("birth_date, gender")
+          .eq("user_id", cons.patient_id)
+          .maybeSingle();
+
+        const { data: vitals } = await supabaseAdmin
+          .from("vital_signs")
+          .select("systolic, diastolic, heart_rate, spo2, is_emergency, measured_at")
+          .eq("consultation_id", cons.id)
+          .maybeSingle();
+
+        const remainingSeconds = cons.expires_at
+          ? Math.max(0, Math.floor((new Date(cons.expires_at).getTime() - Date.now()) / 1000))
+          : 0;
+
+        results.push({
+          consultation_id: cons.id,
+          patient: {
+            id: patientUser?.id,
+            full_name: patientUser?.full_name,
+            birth_date: patientProfile?.birth_date || null,
+            gender: patientProfile?.gender || null,
+          },
+          duration_minutes: cons.duration_minutes,
+          is_emergency: vitals?.is_emergency ?? false,
+          complaint: cons.complaint,
+          vitals: vitals
+            ? {
+                systolic: vitals.systolic,
+                diastolic: vitals.diastolic,
+                heart_rate: vitals.heart_rate,
+                spo2: vitals.spo2,
+                measured_at: vitals.measured_at,
+              }
+            : null,
+          started_at: cons.started_at,
+          expires_at: cons.expires_at,
+          remaining_seconds: remainingSeconds,
+        });
+      }
+
+      return results;
+    }
+  }
+
+  /**
+   * Dokter Menerima Permintaan Konsultasi (POST /consultations/:id/accept)
+   */
+  static async acceptConsultation(consultationId: string, doctorId: string) {
+    // 1. Cek konsultasi
+    const { data: consultation, error: consErr } = await supabaseAdmin
+      .from("consultations")
+      .select("*")
+      .eq("id", consultationId)
+      .maybeSingle();
+
+    if (consErr || !consultation) {
+      throw new AppError(404, "NOT_FOUND", "Konsultasi tidak ditemukan");
+    }
+
+    if (consultation.status !== "waiting_doctor") {
+      throw new AppError(
+        400,
+        "INVALID_STATE",
+        `Konsultasi tidak dapat diterima karena statusnya '${consultation.status}'`
+      );
+    }
+
+    // 2. Cek penugasan dokter
+    const { data: assignment, error: assignErr } = await supabaseAdmin
+      .from("consultation_assignments")
+      .select("*")
+      .eq("consultation_id", consultationId)
+      .eq("doctor_id", doctorId)
+      .eq("status", "offered")
+      .maybeSingle();
+
+    if (assignErr || !assignment) {
+      throw new AppError(403, "FORBIDDEN", "Anda tidak memiliki penugasan aktif untuk konsultasi ini");
+    }
+
+    // Cek apakah deadline respons sudah terlewati
+    if (new Date() > new Date(assignment.deadline_at)) {
+      throw new AppError(
+        400,
+        "ASSIGNMENT_EXPIRED",
+        "Batas waktu konfirmasi penugasan (15 menit) telah berakhir"
+      );
+    }
+
+    // 3. Update penugasan dokter menjadi accepted
+    const nowIso = new Date().toISOString();
+    await supabaseAdmin
+      .from("consultation_assignments")
+      .update({
+        status: "accepted",
+        responded_at: nowIso,
+      })
+      .eq("id", assignment.id);
+
+    // 4. Hitung durasi dan waktu berakhir sesi konsultasi
+    const durationMinutes = consultation.duration_minutes || 15;
+    const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
+
+    const { data: updatedCons, error: updateErr } = await supabaseAdmin
+      .from("consultations")
+      .update({
+        status: "active",
+        started_at: nowIso,
+        expires_at: expiresAt,
+        updated_at: nowIso,
+      })
+      .eq("id", consultationId)
+      .select()
+      .single();
+
+    if (updateErr || !updatedCons) {
+      throw new AppError(500, "DATABASE_ERROR", "Gagal memperbarui status konsultasi");
+    }
+
+    // 5. Kirim notifikasi ke pasien bahwa dokter telah menerima sesi
+    const { data: docUser } = await supabaseAdmin
+      .from("users")
+      .select("full_name")
+      .eq("id", doctorId)
+      .single();
+
+    await supabaseAdmin.from("notifications").insert({
+      user_id: consultation.patient_id,
+      type: "consultation_accepted",
+      title: "Konsultasi Dimulai",
+      body: `${docUser?.full_name || "Dokter"} telah menerima sesi konsultasi Anda. Ruang chat aktif.`,
+      data: { consultation_id: consultationId },
+    });
+
+    const remainingSeconds = durationMinutes * 60;
+
+    return {
+      ...updatedCons,
+      remaining_seconds: remainingSeconds,
+    };
+  }
+
+  /**
+   * Dokter Menolak Permintaan Konsultasi (POST /consultations/:id/reject)
+   */
+  static async rejectConsultation(consultationId: string, doctorId: string, reason?: string) {
+    const { data: consultation, error: consErr } = await supabaseAdmin
+      .from("consultations")
+      .select("*")
+      .eq("id", consultationId)
+      .maybeSingle();
+
+    if (consErr || !consultation) {
+      throw new AppError(404, "NOT_FOUND", "Konsultasi tidak ditemukan");
+    }
+
+    if (consultation.status !== "waiting_doctor") {
+      throw new AppError(
+        400,
+        "INVALID_STATE",
+        `Konsultasi tidak dapat ditolak karena statusnya '${consultation.status}'`
+      );
+    }
+
+    const { data: assignment } = await supabaseAdmin
+      .from("consultation_assignments")
+      .select("id")
+      .eq("consultation_id", consultationId)
+      .eq("doctor_id", doctorId)
+      .eq("status", "offered")
+      .maybeSingle();
+
+    if (!assignment) {
+      throw new AppError(403, "FORBIDDEN", "Anda tidak memiliki penugasan aktif untuk konsultasi ini");
+    }
+
+    const nowIso = new Date().toISOString();
+    await supabaseAdmin
+      .from("consultation_assignments")
+      .update({
+        status: "declined",
+        responded_at: nowIso,
+      })
+      .eq("id", assignment.id);
+
+    // Alihkan konsultasi ke dokter pengganti lain
+    return await this.reassignConsultation(consultationId, doctorId, reason || "doctor_declined");
+  }
+
+  /**
+   * Mengalihkan Konsultasi ke Dokter Pengganti (Maksimal 3 Kali Reassign)
+   */
+  static async reassignConsultation(consultationId: string, previousDoctorId: string, reason: string) {
+    const { data: consultation } = await supabaseAdmin
+      .from("consultations")
+      .select("*")
+      .eq("id", consultationId)
+      .single();
+
+    if (!consultation) {
+      throw new AppError(404, "NOT_FOUND", "Konsultasi tidak ditemukan");
+    }
+
+    const currentCount = consultation.reassign_count || 0;
+    const maxReassign = env.MAX_DOCTOR_REASSIGN || 3;
+
+    // Jika sudah mencapai batas maksimal pengalihan
+    if (currentCount >= maxReassign) {
+      const nowIso = new Date().toISOString();
+      await supabaseAdmin
+        .from("consultations")
+        .update({
+          status: "cancelled",
+          close_reason: "no_available_replacement_doctor",
+          ended_at: nowIso,
+          updated_at: nowIso,
+        })
+        .eq("id", consultationId);
+
+      // Notifikasi pembatalan dan proses refund ke pasien
+      await supabaseAdmin.from("notifications").insert({
+        user_id: consultation.patient_id,
+        type: "consultation_cancelled",
+        title: "Konsultasi Dibatalkan",
+        body: "Mohon maaf, tidak ada dokter spesialis yang tersedia saat ini. Dana konsultasi Anda akan diproses untuk pengembalian dana (refund).",
+        data: { consultation_id: consultationId },
+      });
+
+      return {
+        reassigned: false,
+        status: "cancelled",
+        message: "Batas pengalihan tercapai. Konsultasi dibatalkan dan refund diproses.",
+      };
+    }
+
+    // Cari daftar dokter yang sudah pernah ditawari konsultasi ini (agar tidak ditawari ke dokter yang sama)
+    const { data: pastAssignments } = await supabaseAdmin
+      .from("consultation_assignments")
+      .select("doctor_id")
+      .eq("consultation_id", consultationId);
+
+    const excludedDoctorIds = new Set<string>();
+    excludedDoctorIds.add(previousDoctorId);
+    pastAssignments?.forEach((a) => excludedDoctorIds.add(a.doctor_id));
+
+    // Cari dokter online, approved, dan tidak sedang menangani sesi aktif
+    const { data: onlineDoctors } = await supabaseAdmin
+      .from("doctor_profiles")
+      .select("user_id")
+      .eq("verification_status", "approved")
+      .eq("is_online", true);
+
+    const candidates = (onlineDoctors || []).filter((d) => !excludedDoctorIds.has(d.user_id));
+
+    let chosenDoctorId: string | null = null;
+    const duration = consultation.duration_minutes || 15;
+    const paidDoctorFee = consultation.doctor_fee || 0;
+
+    for (const cand of candidates) {
+      // 1. Cek apakah dokter sedang ada sesi aktif
+      const { data: busy } = await supabaseAdmin
+        .from("consultations")
+        .select("id")
+        .eq("doctor_id", cand.user_id)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle();
+
+      if (busy) continue;
+
+      // 2. Cek tarif dokter pengganti: tarif harus <= harga yang sudah dibayar pasien (Asumsi PRD)
+      const { data: tariff } = await supabaseAdmin
+        .from("doctor_tariffs")
+        .select("price")
+        .eq("doctor_id", cand.user_id)
+        .eq("duration_minutes", duration)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      const candFee = tariff?.price ?? 50000;
+      if (candFee <= paidDoctorFee || paidDoctorFee === 0) {
+        chosenDoctorId = cand.user_id;
+        break;
+      }
+    }
+
+    if (!chosenDoctorId) {
+      // Tidak ada dokter pengganti yang cocok
+      const nowIso = new Date().toISOString();
+      await supabaseAdmin
+        .from("consultations")
+        .update({
+          status: "cancelled",
+          close_reason: "no_available_replacement_doctor",
+          ended_at: nowIso,
+          updated_at: nowIso,
+        })
+        .eq("id", consultationId);
+
+      await supabaseAdmin.from("notifications").insert({
+        user_id: consultation.patient_id,
+        type: "consultation_cancelled",
+        title: "Konsultasi Dibatalkan",
+        body: "Mohon maaf, tidak ada dokter pengganti yang tersedia saat ini. Pembayaran Anda akan diproses untuk pengembalian dana.",
+        data: { consultation_id: consultationId },
+      });
+
+      return {
+        reassigned: false,
+        status: "cancelled",
+        message: "Tidak ada dokter pengganti yang tersedia. Konsultasi dibatalkan.",
+      };
+    }
+
+    // Dokter pengganti ditemukan!
+    const nowIso = new Date().toISOString();
+    const deadlineMinutes = env.DOCTOR_RESPONSE_TIMEOUT_MINUTES || 15;
+    const newDeadlineAt = new Date(Date.now() + deadlineMinutes * 60 * 1000).toISOString();
+    const newReassignCount = currentCount + 1;
+
+    // Update konsultasi
+    await supabaseAdmin
+      .from("consultations")
+      .update({
+        doctor_id: chosenDoctorId,
+        reassign_count: newReassignCount,
+        response_deadline_at: newDeadlineAt,
+        updated_at: nowIso,
+      })
+      .eq("id", consultationId);
+
+    // Buat penugasan baru
+    await supabaseAdmin.from("consultation_assignments").insert({
+      consultation_id: consultationId,
+      doctor_id: chosenDoctorId,
+      status: "offered",
+      offered_at: nowIso,
+      deadline_at: newDeadlineAt,
+    });
+
+    // Notifikasi untuk dokter baru
+    await supabaseAdmin.from("notifications").insert({
+      user_id: chosenDoctorId,
+      type: "consultation_request",
+      title: "Permintaan Konsultasi Baru (Pengalihan)",
+      body: "Terdapat permintaan konsultasi yang dialihkan kepada Anda. Harap konfirmasi dalam 15 menit.",
+      data: { consultation_id: consultationId },
+    });
+
+    // Notifikasi untuk pasien
+    await supabaseAdmin.from("notifications").insert({
+      user_id: consultation.patient_id,
+      type: "consultation_reassigned",
+      title: "Konsultasi Dialihkan",
+      body: "Konsultasi Anda dialihkan ke dokter spesialis jantung lainnya yang sedang aktif.",
+      data: { consultation_id: consultationId },
+    });
+
+    return {
+      reassigned: true,
+      status: "waiting_doctor",
+      new_doctor_id: chosenDoctorId,
+      reassign_count: newReassignCount,
+      response_deadline_at: newDeadlineAt,
+    };
+  }
+
+  /**
+   * Dokter Menutup Sesi Konsultasi (POST /consultations/:id/close)
+   */
+  static async closeConsultation(consultationId: string, doctorId: string, doctorSummary?: string) {
+    const { data: consultation, error: consErr } = await supabaseAdmin
+      .from("consultations")
+      .select("*")
+      .eq("id", consultationId)
+      .maybeSingle();
+
+    if (consErr || !consultation) {
+      throw new AppError(404, "NOT_FOUND", "Konsultasi tidak ditemukan");
+    }
+
+    if (consultation.status !== "active") {
+      throw new AppError(
+        400,
+        "INVALID_STATE",
+        `Hanya konsultasi aktif yang dapat ditutup (status saat ini: '${consultation.status}')`
+      );
+    }
+
+    if (consultation.doctor_id !== doctorId) {
+      throw new AppError(403, "FORBIDDEN", "Anda bukan dokter penanggung jawab untuk sesi konsultasi ini");
+    }
+
+    const nowIso = new Date().toISOString();
+    const { data: updated, error: updateErr } = await supabaseAdmin
+      .from("consultations")
+      .update({
+        status: "closed",
+        ended_at: nowIso,
+        closed_by: doctorId,
+        close_reason: "doctor_closed",
+        doctor_summary: doctorSummary || null,
+        updated_at: nowIso,
+      })
+      .eq("id", consultationId)
+      .select()
+      .single();
+
+    if (updateErr || !updated) {
+      throw new AppError(500, "DATABASE_ERROR", "Gagal menutup sesi konsultasi");
+    }
+
+    // Notifikasi penutupan ke pasien
+    await supabaseAdmin.from("notifications").insert({
+      user_id: consultation.patient_id,
+      type: "consultation_closed",
+      title: "Konsultasi Selesai",
+      body: "Dokter telah menyelesaikan sesi konsultasi. Anda dapat melihat ringkasan medis di aplikasi.",
+      data: { consultation_id: consultationId },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Riwayat Pasien untuk Dokter (GET /patients/:id/history)
+   * Hanya menampilkan rekam medis, tanda vital, dan resep sebelumnya TANPA isi chat terdahulu (Privacy PRD)
+   */
+  static async getPatientHistoryForDoctor(patientId: string, doctorId: string) {
+    // 1. Cek hak akses dokter: harus pernah ditawari assignment atau pernah menangani pasien ini
+    const { data: assignment } = await supabaseAdmin
+      .from("consultation_assignments")
+      .select("id")
+      .eq("doctor_id", doctorId)
+      .in(
+        "consultation_id",
+        (
+          await supabaseAdmin.from("consultations").select("id").eq("patient_id", patientId)
+        ).data?.map((c) => c.id) || []
+      )
+      .limit(1)
+      .maybeSingle();
+
+    const { data: handled } = await supabaseAdmin
+      .from("consultations")
+      .select("id")
+      .eq("patient_id", patientId)
+      .eq("doctor_id", doctorId)
+      .limit(1)
+      .maybeSingle();
+
+    if (!assignment && !handled) {
+      throw new AppError(
+        403,
+        "FORBIDDEN",
+        "Anda tidak memiliki hak akses untuk melihat riwayat pasien ini"
+      );
+    }
+
+    // 2. Ambil konsultasi terdahulu pasien
+    const { data: pastConsultations, error } = await supabaseAdmin
+      .from("consultations")
+      .select("id, doctor_id, created_at, complaint, doctor_summary, status")
+      .eq("patient_id", patientId)
+      .in("status", ["active", "closed"])
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new AppError(500, "DATABASE_ERROR", "Gagal mengambil riwayat konsultasi pasien");
+    }
+
+    const historyResults = [];
+    for (const cons of pastConsultations || []) {
+      // Ambil nama dokter
+      let docName = "Dokter TeleHeart";
+      if (cons.doctor_id) {
+        const { data: dUser } = await supabaseAdmin
+          .from("users")
+          .select("full_name")
+          .eq("id", cons.doctor_id)
+          .maybeSingle();
+        if (dUser?.full_name) docName = dUser.full_name;
+      }
+
+      // Ambil tanda vital
+      const { data: vitals } = await supabaseAdmin
+        .from("vital_signs")
+        .select("systolic, diastolic, heart_rate, spo2, measured_at")
+        .eq("consultation_id", cons.id)
+        .maybeSingle();
+
+      // Ambil resep jika ada
+      const { data: pres } = await supabaseAdmin
+        .from("prescriptions")
+        .select("id, status")
+        .eq("consultation_id", cons.id)
+        .maybeSingle();
+
+      let prescriptionItems: any[] = [];
+      if (pres) {
+        const { data: items } = await supabaseAdmin
+          .from("prescription_items")
+          .select("medicine_name, dosage, quantity, instructions")
+          .eq("prescription_id", pres.id);
+        prescriptionItems = items || [];
+      }
+
+      historyResults.push({
+        consultation_id: cons.id,
+        date: cons.created_at,
+        doctor: {
+          full_name: docName,
+        },
+        vitals: vitals || null,
+        doctor_summary: cons.doctor_summary || null,
+        prescription: pres
+          ? {
+              id: pres.id,
+              status: pres.status,
+              items: prescriptionItems,
+            }
+          : null,
+      });
+    }
+
+    return historyResults;
   }
 }
 

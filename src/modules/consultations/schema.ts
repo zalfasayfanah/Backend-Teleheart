@@ -30,3 +30,14 @@ export const submitVitalsSchema = z.object({
 export type CreateConsultationInput = z.infer<typeof createConsultationSchema>;
 export type SubmitVitalsInput = z.infer<typeof submitVitalsSchema>;
 
+export const closeConsultationSchema = z.object({
+  doctor_summary: z.string().optional(),
+});
+
+export const rejectConsultationSchema = z.object({
+  reason: z.string().optional(),
+});
+
+export type CloseConsultationInput = z.infer<typeof closeConsultationSchema>;
+export type RejectConsultationInput = z.infer<typeof rejectConsultationSchema>;
+
