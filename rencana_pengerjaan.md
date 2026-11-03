@@ -68,21 +68,20 @@ Kerjakan **satu tahap demi satu tahap**. Jangan melompat ke tahap berikutnya seb
 
 ---
 
-### 🟢 Fase 1: Setup Database Supabase & Migrasi Awal
+### 🟢 Fase 1: Setup Database Supabase & Migrasi Awal ✅ *(Selesai)*
 > **Tujuan:** Menyiapkan rumah data (tabel, enum, relasi) di PostgreSQL sesuai `docs/ERD.md`.
 
-- [ ] **Task 1.1: Buat Proyek di Supabase**
-  - Buat project baru di dashboard Supabase.
+- [x] **Task 1.1: Buat Proyek di Supabase**
+  - Buat project baru di dashboard Supabase (`cndxpqotturhmgsadfqi`).
   - Salin `Project URL`, `anon key`, dan `service_role key` ke file `.env` lokal.
-- [ ] **Task 1.2: Buat File Migrasi SQL Berdasarkan `docs/ERD.md`**
+- [x] **Task 1.2: Buat File Migrasi SQL Berdasarkan `docs/ERD.md`**
   - Buat folder `supabase/migrations/`.
-  - Buat file migrasi untuk tipe ENUM (user_role, consultation_status, payment_status, prescription_status, dll).
-  - Buat tabel utama: `users`, `patient_profiles`, `doctor_profiles`, `health_records`, `consultations`, `payments`, `chat_messages`, `prescriptions`, `prescription_items`, `prediction_logs`, `audit_logs`.
-- [ ] **Task 1.3: Eksekusi Migrasi & Cek Relasi**
-  - Jalankan script SQL di Supabase SQL Editor atau via CLI.
-  - Verifikasi di *Table Editor* Supabase bahwa semua tabel dan foreign key sudah terhubung dengan benar.
-- [ ] **Task 1.4: Inisialisasi Supabase Client di Backend**
-  - Buat file `src/lib/supabase.ts` untuk koneksi Supabase Admin Client (`supabaseAdmin`) dengan `service_role_key`.
+  - Buat file migrasi untuk 9 tipe ENUM dan 20 tabel utama di `supabase/migrations/20261103000001_initial_schema.sql`.
+- [x] **Task 1.3: Eksekusi Migrasi & Cek Relasi**
+  - Jalankan script SQL di Supabase SQL Editor.
+  - Verifikasi otomatis seluruh 20 tabel berhasil aktif via unit test Vitest.
+- [x] **Task 1.4: Inisialisasi Supabase Client di Backend**
+  - Buat file `src/lib/supabase.ts` untuk koneksi Supabase Admin Client (`supabaseAdmin`) dengan `service_role_key` dan `supabaseAnon`.
 
 ---
 
