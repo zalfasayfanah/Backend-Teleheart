@@ -69,3 +69,4 @@ export type RegisterPatientInput = z.infer<typeof registerPatientSchema>;
 export type RegisterDoctorInput = z.infer<typeof registerDoctorSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
+

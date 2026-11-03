@@ -24,3 +24,4 @@ describe("Crypto & NIK utilities", () => {
     expect(masked).toBe("************0001");
   });
 });
+

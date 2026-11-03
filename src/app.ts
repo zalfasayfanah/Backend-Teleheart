@@ -3,6 +3,7 @@ import cors from "cors";
 import { env } from "./config/env.js";
 import healthRouter from "./modules/health/routes.js";
 import authRouter from "./modules/auth/routes.js";
+import patientRouter from "./modules/patients/routes.js";
 import { AuthController } from "./modules/auth/controller.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { errorHandler, AppError } from "./middleware/errorHandler.js";
@@ -31,6 +32,7 @@ const apiV1Router = express.Router();
 // Mount modul-modul API v1
 apiV1Router.use("/health", healthRouter);
 apiV1Router.use("/auth", authRouter);
+apiV1Router.use("/patients", patientRouter);
 apiV1Router.get("/me", authMiddleware, AuthController.getMe);
 
 // Pasang /api/v1 ke Express

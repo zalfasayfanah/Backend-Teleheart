@@ -69,3 +69,4 @@ export function maskNik(nik: string): string {
   const lastFour = nik.slice(-4);
   return "************" + lastFour;
 }
+

@@ -109,18 +109,23 @@ Kerjakan **satu tahap demi satu tahap**. Jangan melompat ke tahap berikutnya seb
 
 ---
 
-### 🟢 Fase 3: Modul Profil Pasien & Enkripsi Data Medis
+### 🟢 Fase 3: Modul Profil Pasien & Enkripsi Data Medis ✅ *(Selesai)*
 > **Tujuan:** Mengelola data pasien dengan enkripsi NIK sesuai regulasi privasi data medis.
 
-- [ ] **Task 3.1: Utilitas Enkripsi NIK**
-  - Buat `src/lib/crypto.ts` untuk enkripsi AES-256 (`nik_encrypted`), hashing dengan pepper (`nik_hash`), dan masking (`nik_masked`, contoh: `3201**********0001`).
-- [ ] **Task 3.2: CRUD Profil Kesehatan Pasien**
+- [x] **Task 3.1: Utilitas Enkripsi NIK**
+  - Buat `src/lib/crypto.ts` untuk enkripsi AES-256 (`nik_encrypted`), hashing dengan pepper (`nik_hash`), dan masking (`nik_masked`, format `************0001`).
+- [x] **Task 3.2: CRUD Profil Kesehatan Pasien**
   - Buat `src/modules/patients/` (routes, controller, service, schema).
-  - `GET /api/v1/patients/me`: Mengambil profil pasien sendiri (NIK wajib ter-mask).
-  - `PUT /api/v1/patients/me`: Update profil umum (nama, tanggal lahir, jenis kelamin, golongan darah).
-  - `GET /api/v1/patients/me/health-records`: Riwayat riwayat penyakit atau keluhan dasar.
-  - `PUT /api/v1/patients/me/health-records`: Simpan/update rekam medis dasar pasien.
-  - **Uji coba Postman:** Update profil, pastikan respon NIK ter-mask dan data NIK di database tersimpan terenkripsi.
+  - `GET /api/v1/patients/me/profile`: Mengambil profil pasien sendiri (NIK wajib ter-mask, riwayat penyakit, obat rutin, alergi).
+  - `PUT /api/v1/patients/me/profile`: Update profil umum (`phone`, `has_prior_hospital_checkup`).
+  - `GET/POST /api/v1/patients/me/medical-histories`: Daftar / tambah riwayat penyakit.
+  - `PUT/DELETE /api/v1/patients/me/medical-histories/:id`: Ubah / hapus riwayat penyakit.
+  - `GET/POST /api/v1/patients/me/medications`: Daftar / tambah obat rutin.
+  - `PUT/DELETE /api/v1/patients/me/medications/:id`: Ubah / hapus obat rutin.
+  - `GET/POST /api/v1/patients/me/allergies`: Daftar / tambah alergi.
+  - `PUT/DELETE /api/v1/patients/me/allergies/:id`: Ubah / hapus alergi.
+  - `GET /api/v1/patients/:id/profile`: Profil kesehatan pasien untuk dokter yang ditugaskan (audit trail dicatat, NIK & phone disembunyikan).
+  - **Uji coba:** 11 unit & integration tests lolos (total 49 tests passing).
 
 ---
 

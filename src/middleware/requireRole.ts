@@ -20,3 +20,4 @@ export function requireRole(...allowedRoles: Array<"patient" | "doctor" | "admin
     next();
   };
 }
+

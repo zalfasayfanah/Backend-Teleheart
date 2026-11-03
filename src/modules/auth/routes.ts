@@ -22,3 +22,4 @@ authRouter.post("/logout", authMiddleware, AuthController.logout);
 authRouter.get("/me", authMiddleware, AuthController.getMe);
 
 export default authRouter;
+
