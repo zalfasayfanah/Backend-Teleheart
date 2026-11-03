@@ -54,3 +54,4 @@ export type TariffItemInput = z.infer<typeof tariffItemSchema>;
 export type UpdateTariffsInput = z.infer<typeof updateTariffsSchema>;
 export type DoctorQueryInput = z.infer<typeof doctorQuerySchema>;
 export type VerifyDoctorInput = z.infer<typeof verifyDoctorSchema>;
+

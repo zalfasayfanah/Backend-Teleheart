@@ -55,3 +55,4 @@ adminDoctorRouter.patch(
 // Router Tarif Platform
 export const platformFeeRouter = Router();
 platformFeeRouter.get("/current", DoctorController.getCurrentPlatformFee);
+
