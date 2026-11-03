@@ -7,8 +7,8 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(8888),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   
-  SUPABASE_URL: z.string().url().default("https://cndxpqotturhmgsadfqi.supabase.co"),
-  SUPABASE_ANON_KEY: z.string().min(1).default("sb_publishable_waahzjYMS4ELHyjYSNWNiA_CU4OagtO"),
+  SUPABASE_URL: z.string().url().default("https://placeholder.supabase.co"),
+  SUPABASE_ANON_KEY: z.string().min(1).default("placeholder_anon_key"),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional().default(""),
 
   MAYAR_API_KEY: z.string().optional().default(""),

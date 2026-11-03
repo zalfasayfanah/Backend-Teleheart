@@ -9,7 +9,8 @@
     { "key": "access_token", "value": "" },
     { "key": "doctor_token", "value": "" },
     { "key": "consultation_id", "value": "" },
-    { "key": "mayar_invoice_id", "value": "" }
+    { "key": "mayar_invoice_id", "value": "" },
+    { "key": "mayar_secret", "value": "" }
   ],
   "item": [
     {
@@ -279,7 +280,7 @@
               "mode": "raw",
               "raw": "{\n  \"event\": \"payment.received\",\n  \"data\": {\n    \"productId\": \"{{mayar_invoice_id}}\",\n    \"status\": \"SUCCESS\",\n    \"paymentMethod\": \"QRIS\",\n    \"amount\": 55000,\n    \"extraData\": {\n      \"consultationId\": \"{{consultation_id}}\"\n    }\n  }\n}"
             },
-            "url": "{{base_url}}/webhooks/mayar?token=01a6eb1852277b5bd01a425bca2f47796971dc67e1a08fdc674e7543a8117c206d64794c48a896884fc6b11fba3ef16e6e8b3eb8dd59a9f1a20c224afff42789"
+            "url": "{{base_url}}/webhooks/mayar?token={{mayar_secret}}"
           }
         }
       ]
