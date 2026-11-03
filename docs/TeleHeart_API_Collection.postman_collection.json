@@ -1,0 +1,288 @@
+{
+  "info": {
+    "name": "TeleHeart API (Fase 0 - Fase 6)",
+    "description": "Koleksi API TeleHeart Backend siap pakai untuk tim Frontend (Mobile & Web).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8888/api/v1" },
+    { "key": "access_token", "value": "" },
+    { "key": "doctor_token", "value": "" },
+    { "key": "consultation_id", "value": "" },
+    { "key": "mayar_invoice_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Fase 0 - Health Check",
+      "item": [
+        {
+          "name": "Health Check Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fase 2 - Autentikasi (Auth)",
+      "item": [
+        {
+          "name": "1. Registrasi Pasien Baru",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Zalfa Pasien\",\n  \"nik\": \"3201010101900001\",\n  \"birth_date\": \"1995-04-23\",\n  \"gender\": \"male\",\n  \"phone\": \"081234567890\",\n  \"email\": \"pasien@teleheart.id\",\n  \"password\": \"password123\",\n  \"consents\": [\n    { \"consent_type\": \"privacy_policy\", \"version\": \"1.0\" },\n    { \"consent_type\": \"medical_data_processing\", \"version\": \"1.0\" }\n  ]\n}"
+            },
+            "url": "{{base_url}}/auth/register/patient"
+          }
+        },
+        {
+          "name": "2. Registrasi Dokter Baru",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"dr. Siti Sp.JP\",\n  \"email\": \"dr.siti@teleheart.id\",\n  \"password\": \"password123\",\n  \"str_number\": \"STR-1234567890\",\n  \"sip_number\": \"SIP-1234567890\",\n  \"specialization\": \"Spesialis Jantung dan Pembuluh Darah\",\n  \"workplace\": \"RS Jantung Harapan\",\n  \"consents\": [\n    { \"consent_type\": \"privacy_policy\", \"version\": \"1.0\" },\n    { \"consent_type\": \"medical_data_processing\", \"version\": \"1.0\" }\n  ]\n}"
+            },
+            "url": "{{base_url}}/auth/register/doctor"
+          }
+        },
+        {
+          "name": "3. Login Pasien Mobile",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Client-Platform", "value": "mobile" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"pasien@teleheart.id\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          }
+        },
+        {
+          "name": "4. Login Dokter Web",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Client-Platform", "value": "web" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"dr.siti@teleheart.id\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          }
+        },
+        {
+          "name": "5. Ambil Info Akun Login (/me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fase 3 - Profil Pasien & Medis",
+      "item": [
+        {
+          "name": "1. Ambil Profil Sendiri (NIK Termasking)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/patients/me/profile"
+          }
+        },
+        {
+          "name": "2. Update Kontak Profil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"089876543210\",\n  \"has_prior_hospital_checkup\": true\n}"
+            },
+            "url": "{{base_url}}/patients/me/profile"
+          }
+        },
+        {
+          "name": "3. Tambah Riwayat Penyakit",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"condition_name\": \"Hipertensi Esensial\",\n  \"diagnosed_year\": 2021,\n  \"status\": \"chronic\"\n}"
+            },
+            "url": "{{base_url}}/patients/me/medical-histories"
+          }
+        },
+        {
+          "name": "4. Tambah Obat Rutin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"medicine_name\": \"Amlodipine\",\n  \"dosage\": \"5 mg\",\n  \"frequency\": \"1x sehari\"\n}"
+            },
+            "url": "{{base_url}}/patients/me/medications"
+          }
+        },
+        {
+          "name": "5. Tambah Alergi",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allergen\": \"Penisilin\",\n  \"reaction_type\": \"Gatal dan ruam kulit\",\n  \"severity\": \"moderate\"\n}"
+            },
+            "url": "{{base_url}}/patients/me/allergies"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fase 4 - Dokter & Tarif",
+      "item": [
+        {
+          "name": "1. Pasien Lihat Daftar Dokter Online & Tarif",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/doctors"
+          }
+        },
+        {
+          "name": "2. Cek Biaya Platform Aktif",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/platform-fee/current"
+          }
+        },
+        {
+          "name": "3. Dokter Update Status Online",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{doctor_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_online\": true\n}"
+            },
+            "url": "{{base_url}}/doctors/me/online"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fase 5 - Konsultasi & Tanda Vital",
+      "item": [
+        {
+          "name": "1. Buat Draft Konsultasi",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctor_id\": \"e4582baa-b1f0-4c1c-a527-b9350d5d6c7f\",\n  \"duration_minutes\": 15,\n  \"complaint\": \"Dada terasa nyeri dan sering berdebar\"\n}"
+            },
+            "url": "{{base_url}}/consultations"
+          }
+        },
+        {
+          "name": "2. Input Tanda Vital Awal (Early Warning)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"systolic\": 120,\n  \"diastolic\": 80,\n  \"heart_rate\": 75,\n  \"oxygen_saturation\": 98,\n  \"notes\": \"Pengukuran pagi hari\"\n}"
+            },
+            "url": "{{base_url}}/consultations/{{consultation_id}}/vitals"
+          }
+        },
+        {
+          "name": "3. Detail Konsultasi",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/consultations/{{consultation_id}}"
+          }
+        },
+        {
+          "name": "4. Riwayat Konsultasi",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/consultations"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fase 6 - Pembayaran Mayar",
+      "item": [
+        {
+          "name": "1. Checkout Pembayaran (Dapatkan Link Mayar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctor_id\": \"e4582baa-b1f0-4c1c-a527-b9350d5d6c7f\",\n  \"duration_minutes\": 15\n}"
+            },
+            "url": "{{base_url}}/consultations/{{consultation_id}}/checkout"
+          }
+        },
+        {
+          "name": "2. Simulasi Webhook Mayar (Sukses Bayar)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"payment.received\",\n  \"data\": {\n    \"productId\": \"{{mayar_invoice_id}}\",\n    \"status\": \"SUCCESS\",\n    \"paymentMethod\": \"QRIS\",\n    \"amount\": 55000,\n    \"extraData\": {\n      \"consultationId\": \"{{consultation_id}}\"\n    }\n  }\n}"
+            },
+            "url": "{{base_url}}/webhooks/mayar?token=01a6eb1852277b5bd01a425bca2f47796971dc67e1a08fdc674e7543a8117c206d64794c48a896884fc6b11fba3ef16e6e8b3eb8dd59a9f1a20c224afff42789"
+          }
+        }
+      ]
+    }
+  ]
+}
