@@ -47,8 +47,9 @@ apiV1Router.use("/consultations", consultationRouter);
 apiV1Router.use("/webhooks", webhookRouter);
 apiV1Router.get("/me", authMiddleware, AuthController.getMe);
 
-// Pasang /api/v1 ke Express
+// Pasang /api/v1 dan /v1 ke Express (kompatibilitas Netlify Functions)
 app.use("/api/v1", apiV1Router);
+app.use("/v1", apiV1Router);
 
 // Tangani route yang tidak terdaftar (404 Not Found)
 app.use((req: Request, res: Response, next: NextFunction) => {

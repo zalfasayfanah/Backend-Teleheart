@@ -126,3 +126,4 @@ Authorization: Bearer <access_token>
 | `active` | Dokter menerima konsultasi *(Fase 7)* | Ruang chat aktif |
 | `closed` | Konsultasi selesai & resep obat terbit *(Fase 7-9)* | Selesai |
 | `cancelled` | Dibatalkan sebelum bayar | Konsultasi batal |
+
