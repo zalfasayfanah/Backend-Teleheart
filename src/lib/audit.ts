@@ -31,3 +31,4 @@ export async function logAudit(params: LogAuditParams): Promise<void> {
     console.error("Gagal mencatat audit log:", error);
   }
 }
+

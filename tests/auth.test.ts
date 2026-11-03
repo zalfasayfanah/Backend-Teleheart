@@ -1,14 +1,15 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
+import crypto from "crypto";
 import app from "../src/app.js";
 import { supabaseAdmin } from "../src/lib/supabase.js";
 
 describe("Auth Module Integration Tests", () => {
-  const timestamp = Date.now();
-  const testPatientEmail = `test.patient.${timestamp}@teleheart.com`;
-  const testDoctorEmail = `test.doctor.${timestamp}@teleheart.com`;
-  const testNik = "337401010190" + String(timestamp).slice(-4);
-  const testStr = "STR-" + String(timestamp).slice(-6);
+  const rand = crypto.randomBytes(4).toString("hex");
+  const testPatientEmail = `test.patient.${rand}@teleheart.com`;
+  const testDoctorEmail = `test.doctor.${rand}@teleheart.com`;
+  const testNik = "337401010190" + String(Math.floor(1000 + Math.random() * 9000));
+  const testStr = "STR-" + rand;
 
   let patientToken = "";
   let doctorToken = "";

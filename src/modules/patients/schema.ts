@@ -46,3 +46,4 @@ export type CreateMedicationInput = z.infer<typeof createMedicationSchema>;
 export type UpdateMedicationInput = z.infer<typeof updateMedicationSchema>;
 export type CreateAllergyInput = z.infer<typeof createAllergySchema>;
 export type UpdateAllergyInput = z.infer<typeof updateAllergySchema>;
+

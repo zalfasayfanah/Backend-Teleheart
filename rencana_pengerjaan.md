@@ -129,19 +129,23 @@ Kerjakan **satu tahap demi satu tahap**. Jangan melompat ke tahap berikutnya seb
 
 ---
 
-### 🟢 Fase 4: Modul Dokter, Tarif & Verifikasi Admin
+### 🟢 Fase 4: Modul Dokter, Tarif & Verifikasi Admin ✅ *(Selesai)*
 > **Tujuan:** Menampilkan daftar dokter yang online untuk pasien dan mengelola status dokter.
 
-- [ ] **Task 4.1: Modul Dokter (Sisi Pasien & Publik)**
-  - Buat `src/modules/doctors/`.
-  - `GET /api/v1/doctors`: Menampilkan daftar dokter aktif, terverifikasi, dan sedang online untuk dipilih pasien.
-  - `GET /api/v1/doctors/:id`: Menampilkan detail dokter (pengalaman, spesialisasi, tarif konsultasi).
-- [ ] **Task 4.2: Modul Dokter (Sisi Dokter Sendiri)**
-  - `GET /api/v1/doctors/me`: Info profil dokter login.
-  - `PUT /api/v1/doctors/me`: Update bio dan tarif konsultasi.
-  - `PUT /api/v1/doctors/me/status`: Ganti status online/offline untuk menerima konsultasi.
-- [ ] **Task 4.3: Verifikasi Dokter oleh Admin**
-  - Buat endpoint admin untuk approve/reject dokter baru sebelum dokter bisa online.
+- [x] **Task 4.1: Modul Dokter (Sisi Pasien & Publik)**
+  - Buat `src/modules/doctors/` (schema, service, controller, routes).
+  - `GET /api/v1/doctors`: Menampilkan daftar dokter aktif, terverifikasi (`approved`), dan sedang online (`is_online = true`) dengan kalkulasi tarif paket (15, 30, 60 menit) + biaya platform.
+  - `GET /api/v1/doctors/:id`: Menampilkan detail dokter dan ketersediaan (`is_available`).
+  - `GET /api/v1/platform-fee/current`: Mengambil tarif platform yang berlaku.
+- [x] **Task 4.2: Modul Dokter (Sisi Dokter Sendiri)**
+  - `GET /api/v1/doctors/me/profile`: Info profil dokter login & status verifikasi.
+  - `PUT /api/v1/doctors/me/profile`: Update bio, workplace, spesialisasi.
+  - `PATCH /api/v1/doctors/me/online`: Ganti status online/offline (otomatis dicek: dokter wajib `approved`).
+  - `GET /api/v1/doctors/me/tariffs`: Mengambil tarif dokter (15, 30, 60 menit).
+  - `PUT /api/v1/doctors/me/tariffs`: Atur tarif konsultasi dokter.
+- [x] **Task 4.3: Verifikasi Dokter oleh Admin**
+  - `PATCH /api/v1/admin/doctors/:id/verification`: Admin approve/reject dokter beserta alasan penolakan dan pengiriman notifikasi in-app.
+  - **Uji coba:** 9 unit & integration tests lolos (total 58 tests passing).
 
 ---
 

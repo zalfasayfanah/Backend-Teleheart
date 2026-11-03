@@ -91,3 +91,4 @@ patientRouter.delete(
 patientRouter.get("/:id/profile", requireRole("doctor"), PatientController.getPatientProfileByDoctor);
 
 export default patientRouter;
+
