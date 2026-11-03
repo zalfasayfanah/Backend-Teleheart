@@ -85,27 +85,27 @@ Kerjakan **satu tahap demi satu tahap**. Jangan melompat ke tahap berikutnya seb
 
 ---
 
-### 🟢 Fase 2: Autentikasi Pengguna & Middleware Keamanan
+### 🟢 Fase 2: Autentikasi Pengguna & Middleware Keamanan ✅ *(Selesai)*
 > **Tujuan:** Mengizinkan pasien & dokter mendaftar, login, dan membatasi akses sesuai hak pengguna.
 
-- [ ] **Task 2.1: Modul Format Respons & Penanganan Error Terpusat**
-  - Buat standar response helper di `src/lib/response.ts` (mengikuti format `docs/API.md`: `{ success: true, data: ... }` dan `{ success: false, error: { code, message } }`).
-  - Buat custom AppError dan error handler middleware di `src/middleware/errorHandler.ts`.
-- [ ] **Task 2.2: Middleware Validasi Input (Zod)**
-  - Buat `src/middleware/validate.ts` untuk memvalidasi request body, query params, atau url params secara otomatis.
-- [ ] **Task 2.3: Registrasi Pasien & Dokter**
-  - Buat modul `src/modules/auth/` (routes, controller, service, schema).
-  - `POST /api/v1/auth/register/patient`: Validasi input, integrasi dengan Supabase Auth signup, simpan data ke tabel `users` & `patient_profiles`.
-  - `POST /api/v1/auth/register/doctor`: Khusus registrasi dokter dengan data SIP, STR, dan tarif default.
-- [ ] **Task 2.4: Login, Refresh Token & Logout**
-  - `POST /api/v1/auth/login`: Verifikasi email & password via Supabase Auth. Wajib cek header `X-Client-Platform` (pasien harus mobile, dokter/admin harus web).
-  - `POST /api/v1/auth/refresh`: Memperbarui token kadaluwarsa.
-  - `POST /api/v1/auth/logout`: Menghapus sesi.
-- [ ] **Task 2.5: Middleware Autentikasi & Otorisasi Peran**
-  - Buat `src/middleware/auth.ts`: Memvalidasi header `Authorization: Bearer <token>`.
-  - Buat `src/middleware/requireRole.ts`: Menolak akses jika peran tidak cocok (contoh: pasien mencoba membuka menu admin).
-  - `GET /api/v1/auth/me`: Mengambil info akun yang sedang login.
-  - **Uji coba Postman:** Registrasi user baru, login, simpan token ke Postman, panggil `/auth/me`.
+- [x] **Task 2.1: Modul Format Respons & Penanganan Error Terpusat**
+  - Standar response helper di `src/lib/response.ts` (`{ data: ... }` dan `{ error: ... }`).
+  - Penanganan error terpusat di `src/middleware/errorHandler.ts` (`AppError`, `ZodError`, 404, 500).
+- [x] **Task 2.2: Middleware Validasi Input (Zod)**
+  - `src/middleware/validate.ts` untuk memvalidasi request body, query params, atau url params otomatis.
+- [x] **Task 2.3: Registrasi Pasien & Dokter**
+  - `src/modules/auth/schema.ts`, `service.ts`, `controller.ts`, `routes.ts`.
+  - `POST /api/v1/auth/register/patient`: Validasi Zod (NIK 16 digit, gender, password, 2 consents), simpan ke Supabase Auth + `users` + `patient_profiles` (NIK terenkripsi & hash).
+  - `POST /api/v1/auth/register/doctor`: Registrasi dokter dengan STR, SIP, status pending verifikasi.
+- [x] **Task 2.4: Login, Refresh Token & Logout**
+  - `POST /api/v1/auth/login`: Wajib header `X-Client-Platform` (pasien harus mobile, dokter/admin harus web). Cek status `is_active`.
+  - `POST /api/v1/auth/refresh`: Memperbarui token kadaluwarsa via Supabase Auth.
+  - `POST /api/v1/auth/logout`: Menghapus sesi auth.
+- [x] **Task 2.5: Middleware Autentikasi & Otorisasi Peran**
+  - `src/middleware/auth.ts`: Memvalidasi header `Authorization: Bearer <token>`.
+  - `src/middleware/requireRole.ts`: Proteksi akses berbasis peran (`patient`, `doctor`, `admin`).
+  - `GET /api/v1/auth/me` & `GET /api/v1/me`: Mengambil info akun yang sedang login.
+  - **Uji coba:** 12 unit & integration tests lolos (total 38 tests passing).
 
 ---
 

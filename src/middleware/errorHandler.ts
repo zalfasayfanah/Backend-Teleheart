@@ -48,3 +48,4 @@ export function errorHandler(
     "Terjadi kesalahan internal pada server"
   );
 }
+

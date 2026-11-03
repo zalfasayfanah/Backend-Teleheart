@@ -410,3 +410,4 @@ CREATE POLICY "Patients can read own prediction logs" ON public.prediction_logs
 
 CREATE POLICY "Users can read own notifications" ON public.notifications
   FOR SELECT USING (auth.uid() = user_id);
+
