@@ -1,0 +1,311 @@
+# 🗺️ Rencana Pengerjaan TeleHeart Backend (Panduan Pemula)
+
+Selamat datang! Dokumen ini dirancang khusus untuk kamu yang **baru pertama kali belajar dan membangun REST API**. Backend TeleHeart adalah aplikasi server yang melayani aplikasi **Mobile Pasien (Flutter)** dan **Web Dokter/Admin (Next.js)**.
+
+---
+
+## 💡 Konsep Dasar REST API untuk Pemula (Analogi Restoran)
+
+Jika kamu belum pernah membuat REST API, bayangkan backend ini seperti **sebuah restoran**:
+1. **Frontend / Klien (Mobile & Web)** = Pelanggan yang datang ke restoran.
+2. **Endpoint / Route (URL)** = Buku menu makanan (misal: `POST /api/v1/auth/login`, `GET /api/v1/doctors`).
+3. **Controller** = Pelayan (Waiter). Tugasnya menerima pesanan dari pelanggan (request), memeriksa kelengkapan pesanan, lalu meneruskannya ke dapur.
+4. **Service** = Koki di dapur. Di sinilah logika bisnis sebenarnya dikerjakan (menghitung tarif, mengenkripsi NIK, memproses pembayaran).
+5. **Database (Supabase / PostgreSQL)** = Lemari bahan makanan. Tempat semua data disimpan permanen (tabel users, konsultasi, resep).
+6. **Middleware** = Satpam di pintu masuk restoran (misal: mengecek kartu identitas / Token JWT apakah pelanggan sah atau dokter asli).
+
+---
+
+## 🛠️ Persiapan Alat & Akun (Prerequisites)
+
+Sebelum mulai menulis kode, pastikan peralatan berikut sudah terpasang di komputer/laptopmu:
+
+- [ ] **Node.js (LTS v20+)**: Mesin runtime untuk menjalankan JavaScript/TypeScript di komputer.
+- [ ] **VS Code** (atau IDE Antigravity) + Ekstensi direkomendasikan: *Prettier*, *ESLint*, *Prisma/PostgreSQL*.
+- [ ] **Git**: Untuk mencatat riwayat perubahan kode (version control).
+- [ ] **Postman** atau **Thunder Client (VS Code)**: Alat untuk menguji API (mengirim request `GET`, `POST`, dll tanpa perlu membuat antarmuka frontend dulu).
+- [ ] **Akun Supabase (Gratis)**: Database PostgreSQL cloud + Auth + Storage di [supabase.com](https://supabase.com).
+- [ ] **Akun Netlify (Gratis)**: Platform hosting backend serverless di [netlify.com](https://netlify.com).
+- [ ] **Akun Sandbox Mayar**: Payment gateway untuk simulasi pembayaran di [mayar.id](https://mayar.id).
+
+---
+
+## 📚 Dokumen Acuan (Wajib Dibuka Saat Bekerja)
+
+Semua spesifikasi proyek sudah dirapikan ke dalam folder `docs/`:
+- 📄 [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md): Ringkasan arsitektur, aturan keamanan wajib, dan panduan AI.
+- 📄 [`docs/PRD.md`](docs/PRD.md): Aturan bisnis (*Business Rules*) dan alur fungsional sistem.
+- 📄 [`docs/ERD.md`](docs/ERD.md): Skema tabel database, tipe data, relasi foreign key, dan enum.
+- 📄 [`docs/API.md`](docs/API.md): Kontrak endpoint (URL, header, format JSON request & response).
+
+---
+
+## 🚀 Tahapan Pengerjaan Bertahap (Roadmap Checklist)
+
+Kerjakan **satu tahap demi satu tahap**. Jangan melompat ke tahap berikutnya sebelum tahap sebelumnya selesai dan teruji!
+
+---
+
+### 🟢 Fase 0: Setup Fondasi Proyek & Health Check ✅ *(Selesai)*
+> **Tujuan:** Menyiapkan struktur folder Node.js + TypeScript dan memastikan server bisa berjalan lokal serta diakses.
+
+- [x] **Task 0.1: Inisialisasi Proyek Node.js & TypeScript**
+  - Buat `package.json` (`npm init -y`).
+  - Install dependensi inti: `express`, `serverless-http`, `cors`, `dotenv`, `zod`.
+  - Install devDependencies: `typescript`, `@types/node`, `@types/express`, `@types/cors`, `tsx`, `vitest`, `supertest`.
+  - Konfigurasi `tsconfig.json` untuk TypeScript modern.
+- [x] **Task 0.2: Buat Struktur Folder Standar**
+  - Buat folder `src/`, `src/config/`, `src/middleware/`, `src/lib/`, `src/modules/`, `netlify/functions/`.
+- [x] **Task 0.3: Konfigurasi Environment & Netlify**
+  - Buat file `.env.example` dan `.env` lokal.
+  - Buat file `netlify.toml` untuk routing serverless functions.
+  - Buat validator variabel lingkungan di `src/config/env.ts` menggunakan Zod.
+- [x] **Task 0.4: Buat Server Express & Endpoint Health Check**
+  - Buat `src/app.ts` yang menginisialisasi Express dan pasang middleware standar (JSON parser, CORS).
+  - Buat `netlify/functions/api.ts` yang membungkus Express app dengan `serverless-http`.
+  - Buat endpoint `GET /api/v1/health` yang mengembalikan status `{ "data": { "status": "ok", "service": "teleheart-backend", "timestamp": "..." } }`.
+  - **Uji coba:** Unit testing dengan Vitest (`npm run test`) terverifikasi 2 passed. Server siap dijalankan dengan `npm run dev`.
+
+---
+
+### 🟢 Fase 1: Setup Database Supabase & Migrasi Awal
+> **Tujuan:** Menyiapkan rumah data (tabel, enum, relasi) di PostgreSQL sesuai `docs/ERD.md`.
+
+- [ ] **Task 1.1: Buat Proyek di Supabase**
+  - Buat project baru di dashboard Supabase.
+  - Salin `Project URL`, `anon key`, dan `service_role key` ke file `.env` lokal.
+- [ ] **Task 1.2: Buat File Migrasi SQL Berdasarkan `docs/ERD.md`**
+  - Buat folder `supabase/migrations/`.
+  - Buat file migrasi untuk tipe ENUM (user_role, consultation_status, payment_status, prescription_status, dll).
+  - Buat tabel utama: `users`, `patient_profiles`, `doctor_profiles`, `health_records`, `consultations`, `payments`, `chat_messages`, `prescriptions`, `prescription_items`, `prediction_logs`, `audit_logs`.
+- [ ] **Task 1.3: Eksekusi Migrasi & Cek Relasi**
+  - Jalankan script SQL di Supabase SQL Editor atau via CLI.
+  - Verifikasi di *Table Editor* Supabase bahwa semua tabel dan foreign key sudah terhubung dengan benar.
+- [ ] **Task 1.4: Inisialisasi Supabase Client di Backend**
+  - Buat file `src/lib/supabase.ts` untuk koneksi Supabase Admin Client (`supabaseAdmin`) dengan `service_role_key`.
+
+---
+
+### 🟢 Fase 2: Autentikasi Pengguna & Middleware Keamanan
+> **Tujuan:** Mengizinkan pasien & dokter mendaftar, login, dan membatasi akses sesuai hak pengguna.
+
+- [ ] **Task 2.1: Modul Format Respons & Penanganan Error Terpusat**
+  - Buat standar response helper di `src/lib/response.ts` (mengikuti format `docs/API.md`: `{ success: true, data: ... }` dan `{ success: false, error: { code, message } }`).
+  - Buat custom AppError dan error handler middleware di `src/middleware/errorHandler.ts`.
+- [ ] **Task 2.2: Middleware Validasi Input (Zod)**
+  - Buat `src/middleware/validate.ts` untuk memvalidasi request body, query params, atau url params secara otomatis.
+- [ ] **Task 2.3: Registrasi Pasien & Dokter**
+  - Buat modul `src/modules/auth/` (routes, controller, service, schema).
+  - `POST /api/v1/auth/register/patient`: Validasi input, integrasi dengan Supabase Auth signup, simpan data ke tabel `users` & `patient_profiles`.
+  - `POST /api/v1/auth/register/doctor`: Khusus registrasi dokter dengan data SIP, STR, dan tarif default.
+- [ ] **Task 2.4: Login, Refresh Token & Logout**
+  - `POST /api/v1/auth/login`: Verifikasi email & password via Supabase Auth. Wajib cek header `X-Client-Platform` (pasien harus mobile, dokter/admin harus web).
+  - `POST /api/v1/auth/refresh`: Memperbarui token kadaluwarsa.
+  - `POST /api/v1/auth/logout`: Menghapus sesi.
+- [ ] **Task 2.5: Middleware Autentikasi & Otorisasi Peran**
+  - Buat `src/middleware/auth.ts`: Memvalidasi header `Authorization: Bearer <token>`.
+  - Buat `src/middleware/requireRole.ts`: Menolak akses jika peran tidak cocok (contoh: pasien mencoba membuka menu admin).
+  - `GET /api/v1/auth/me`: Mengambil info akun yang sedang login.
+  - **Uji coba Postman:** Registrasi user baru, login, simpan token ke Postman, panggil `/auth/me`.
+
+---
+
+### 🟢 Fase 3: Modul Profil Pasien & Enkripsi Data Medis
+> **Tujuan:** Mengelola data pasien dengan enkripsi NIK sesuai regulasi privasi data medis.
+
+- [ ] **Task 3.1: Utilitas Enkripsi NIK**
+  - Buat `src/lib/crypto.ts` untuk enkripsi AES-256 (`nik_encrypted`), hashing dengan pepper (`nik_hash`), dan masking (`nik_masked`, contoh: `3201**********0001`).
+- [ ] **Task 3.2: CRUD Profil Kesehatan Pasien**
+  - Buat `src/modules/patients/` (routes, controller, service, schema).
+  - `GET /api/v1/patients/me`: Mengambil profil pasien sendiri (NIK wajib ter-mask).
+  - `PUT /api/v1/patients/me`: Update profil umum (nama, tanggal lahir, jenis kelamin, golongan darah).
+  - `GET /api/v1/patients/me/health-records`: Riwayat riwayat penyakit atau keluhan dasar.
+  - `PUT /api/v1/patients/me/health-records`: Simpan/update rekam medis dasar pasien.
+  - **Uji coba Postman:** Update profil, pastikan respon NIK ter-mask dan data NIK di database tersimpan terenkripsi.
+
+---
+
+### 🟢 Fase 4: Modul Dokter, Tarif & Verifikasi Admin
+> **Tujuan:** Menampilkan daftar dokter yang online untuk pasien dan mengelola status dokter.
+
+- [ ] **Task 4.1: Modul Dokter (Sisi Pasien & Publik)**
+  - Buat `src/modules/doctors/`.
+  - `GET /api/v1/doctors`: Menampilkan daftar dokter aktif, terverifikasi, dan sedang online untuk dipilih pasien.
+  - `GET /api/v1/doctors/:id`: Menampilkan detail dokter (pengalaman, spesialisasi, tarif konsultasi).
+- [ ] **Task 4.2: Modul Dokter (Sisi Dokter Sendiri)**
+  - `GET /api/v1/doctors/me`: Info profil dokter login.
+  - `PUT /api/v1/doctors/me`: Update bio dan tarif konsultasi.
+  - `PUT /api/v1/doctors/me/status`: Ganti status online/offline untuk menerima konsultasi.
+- [ ] **Task 4.3: Verifikasi Dokter oleh Admin**
+  - Buat endpoint admin untuk approve/reject dokter baru sebelum dokter bisa online.
+
+---
+
+### 🟢 Fase 5: Modul Konsultasi & Evaluasi Tanda Vital
+> **Tujuan:** Pasien membuat draft konsultasi, memasukkan tanda vital, dan mendapatkan status peringatan darurat.
+
+- [ ] **Task 5.1: Evaluator Tanda Vital (Early Warning System)**
+  - Buat logika pemeriksaan tanda vital di `src/modules/consultations/vitalSignsEvaluator.ts` (sesuai ambang batas medis di PRD: tekanan darah sistolik/diastolik, denyut nadi, SpO2).
+  - Tentukan kategori: `normal`, `warning`, atau `critical` beserta rekomendasi darurat.
+- [ ] **Task 5.2: Pembuatan Konsultasi (Draft & Checkout)**
+  - Buat `src/modules/consultations/`.
+  - `POST /api/v1/consultations`: Pasien memilih dokter, mengisi keluhan dan tanda vital. Status awal: `draft` atau langsung `waiting_payment`.
+  - Validasi aturan: Pasien tidak boleh memiliki konsultasi berjalan yang belum selesai.
+  - Hitung snapshot biaya: `total_amount = doctor_fee + platform_fee`.
+  - `GET /api/v1/consultations/:id`: Melihat detail konsultasi.
+  - `GET /api/v1/consultations`: Riwayat konsultasi pasien/dokter.
+
+---
+
+### 🟢 Fase 6: Integrasi Pembayaran Mayar (Invoice & Webhook)
+> **Tujuan:** Menghubungkan sistem ke gateway pembayaran Mayar dan memproses webhook saat pembayaran sukses.
+
+- [ ] **Task 6.1: Service Klien Mayar**
+  - Buat `src/lib/mayar.ts` untuk komunikasi dengan REST API Mayar.
+  - Fungsi `createMayarInvoice`: Mengirim detail checkout (nama, email, nominal, redirect URL) dan menerima `payment_url` serta `invoice_id`.
+- [ ] **Task 6.2: Endpoint Checkout Konsultasi**
+  - `POST /api/v1/consultations/:id/checkout`: Membuat invoice Mayar untuk konsultasi yang berstatus `waiting_payment`.
+  - Simpan ID invoice dan status `unpaid` di tabel `payments`.
+  - Kembalikan tautan pembayaran ke aplikasi mobile.
+- [ ] **Task 6.3: Webhook Handler Mayar (Krusial & Idempotent)**
+  - Buat endpoint publik `POST /api/v1/webhooks/mayar`.
+  - Verifikasi signature / token webhook dari Mayar.
+  - **Idempotensi**: Jika webhook untuk invoice yang sama diterima 2 kali, jangan proses ulang.
+  - Jika pembayaran berhasil: Update tabel `payments` jadi `paid`, ubah status `consultations` jadi `waiting_doctor`, dan picu penugasan dokter.
+  - **Uji coba:** Simulasi trigger webhook menggunakan Postman / ngrok untuk memastikan status konsultasi otomatis berpindah.
+
+---
+
+### 🟢 Fase 7: Alur Penugasan Dokter, Timeout & Siklus Konsultasi
+> **Tujuan:** Mengatur giliran dokter menerima konsultasi (15 menit timeout) hingga sesi berakhir.
+
+- [ ] **Task 7.1: Antrean & Penerimaan oleh Dokter**
+  - `GET /api/v1/doctors/me/queue`: Menampilkan permintaan konsultasi yang masuk ke dokter.
+  - `POST /api/v1/consultations/:id/accept`: Dokter menerima konsultasi. Status berubah menjadi `active`, waktu mulai dicatat.
+  - `POST /api/v1/consultations/:id/reject`: Dokter menolak konsultasi, cari dokter pengganti.
+- [ ] **Task 7.2: Scheduled Function / Job Pemantau (jobs-tick)**
+  - Buat logika di `src/jobs/consultationTimeoutJob.ts`:
+    - Cek konsultasi `waiting_doctor` yang lebih dari 15 menit belum di-accept dokter.
+    - Oper ke dokter lain (maksimal 3 kali reassign) atau batalkan dan proses refund.
+    - Cek konsultasi `active` yang sudah melewati durasi (misal 30 menit) untuk ditutup otomatis.
+  - Sambungkan ke `netlify/functions/jobs-tick.ts`.
+- [ ] **Task 7.3: Penutupan Konsultasi**
+  - `POST /api/v1/consultations/:id/close`: Dokter mengakhiri konsultasi setelah diagnosis selesai. Status berubah menjadi `closed`.
+
+---
+
+### 🟢 Fase 8: Modul Chat 1:1 & Unggah Gambar
+> **Tujuan:** Komunikasi teks dan kirim foto/dokumen antara pasien dan dokter saat sesi konsultasi aktif.
+
+- [ ] **Task 8.1: Endpoint Kirim & Ambil Pesan Chat**
+  - Buat `src/modules/chat/`.
+  - Validasi ketat: Pesan hanya boleh dikirim jika konsultasi berstatus `active`.
+  - `POST /api/v1/consultations/:id/messages`: Kirim pesan teks.
+  - `GET /api/v1/consultations/:id/messages`: Ambil riwayat chat (dengan pagination).
+- [ ] **Task 8.2: Upload Gambar Medis via Signed URL**
+  - Konfigurasi bucket privat di Supabase Storage (`chat-attachments`).
+  - `POST /api/v1/consultations/:id/messages/upload-url`: Generate short-lived Presigned URL agar klien bisa mengunggah gambar aman langsung ke storage.
+- [ ] **Task 8.3: Tandai Pesan Telah Dibaca (Read Status)**
+  - `PUT /api/v1/consultations/:id/messages/read`: Update status `is_read = true`.
+
+---
+
+### 🟢 Fase 9: Modul Resep Obat Digital & Generator PDF
+> **Tujuan:** Dokter menerbitkan resep digital berformat PDF dengan QR code verifikasi publik.
+
+- [ ] **Task 9.1: Pembuatan Resep oleh Dokter**
+  - Buat `src/modules/prescriptions/`.
+  - `POST /api/v1/consultations/:id/prescription`: Input daftar obat, dosis, aturan pakai, dan catatan dokter. Status awal: `draft`.
+  - `POST /api/v1/consultations/:id/prescription/issue`: Menerbitkan resep resmi (`issued`). Resep yang sudah terbit terkunci dan tidak bisa diedit lagi.
+- [ ] **Task 9.2: Generator Dokumen PDF & QR Code**
+  - Buat `src/lib/pdf.ts` menggunakan library `pdf-lib` dan generator QR Code.
+  - Buat template PDF resmi resep TeleHeart (memuat kop, data dokter & SIP, nama pasien terverifikasi, daftar obat, dan cap digital).
+  - Tanamkan QR Code yang mengarah ke URL publik: `https://teleheart.com/verify-prescription?code=...`.
+  - Simpan PDF ke bucket privat Supabase Storage (`prescriptions`).
+- [ ] **Task 9.3: Unduh Resep & Verifikasi Publik**
+  - `GET /api/v1/prescriptions/:id/download`: Mendapatkan link download PDF (hanya bisa diunduh oleh pasien bersangkutan dan konsultasi berstatus `paid`).
+  - `GET /api/v1/public/prescriptions/verify/:code`: Endpoint publik tanpa login untuk memvalidasi keaslian resep jika dibuka oleh apotek/pihak ketiga.
+
+---
+
+### 🟢 Fase 10: Notifikasi Push (Firebase FCM) & Log Prediksi AI
+> **Tujuan:** Mengirim notifikasi push ke handphone pasien saat ada pesan chat/status berubah dan mencatat riwayat prediksi jantung.
+
+- [ ] **Task 10.1: Integrasi Firebase Admin SDK**
+  - Buat `src/lib/fcm.ts` dengan service account credential Firebase.
+  - Fungsi kirim pesan push ke perangkat: `sendPushNotification(fcmToken, title, body, dataPayload)`.
+- [ ] **Task 10.2: Pendaftaran Token Perangkat Pasien/Dokter**
+  - `POST /api/v1/notifications/token`: Menyimpan atau memperbarui FCM token perangkat pengguna saat login.
+- [ ] **Task 10.3: Picu Notifikasi Otomatis**
+  - Notifikasi saat dokter menerima konsultasi.
+  - Notifikasi saat ada pesan chat baru masuk.
+  - Notifikasi saat resep obat selesai diterbitkan.
+- [ ] **Task 10.4: Penyimpanan Hasil Prediksi Risiko Jantung**
+  - Sesuai aturan keamanan: Prediksi dihitung on-device di aplikasi Flutter, backend hanya menerima hasil kesimpulan.
+  - `POST /api/v1/predictions`: Simpan skor risiko (`low`, `moderate`, `high`) dan timestamp.
+  - `GET /api/v1/predictions/my-history`: Pasien melihat riwayat risiko jantungnya sendiri. (Catatan: Dokter & Admin dilarang membaca data ini sesuai BR).
+
+---
+
+### 🟢 Fase 11: Modul Admin, Audit Trail & Keamanan Khusus
+> **Tujuan:** Dashboard pengelolaan admin tanpa melanggar privasi data medis pasien.
+
+- [ ] **Task 11.1: Audit Logging Terpusat**
+  - Buat `src/lib/audit.ts`.
+  - Catat setiap akses dokter ke data medis pasien (nama dokter, ID pasien, aksi yang diakses, timestamp, IP).
+- [ ] **Task 11.2: Endpoint Khusus Admin (Metadata Only)**
+  - Buat `src/modules/admin/`.
+  - `GET /api/v1/admin/users`: Daftar pengguna sistem (pasien & dokter).
+  - `GET /api/v1/admin/transactions`: Laporan keuangan & transaksi pembayaran (hanya nominal, status bayar, ID transaksi; **tanpa diagnosis medis**).
+  - `GET /api/v1/admin/audit-logs`: Melihat log aktivitas sistem.
+  - `POST /api/v1/admin/refunds`: Memproses pengembalian dana jika konsultasi gagal/batal.
+
+---
+
+### 🟢 Fase 12: Pengujian Menyeluruh (Testing End-to-End) & Deploy
+> **Tujuan:** Memastikan seluruh sistem bekerja harmonis dari awal hingga akhir sebelum diserahkan ke tim frontend.
+
+- [ ] **Task 12.1: Buat Postman Collection Komprehensif**
+  - Susun urutan request di Postman dari Folder 1 (Auth) sampai Folder 11 (Admin).
+  - Atur Environment Variables di Postman (`{{baseUrl}}`, `{{patientToken}}`, `{{doctorToken}}`, `{{consultationId}}`).
+- [ ] **Task 12.2: Uji Skenario Lengkap (Happy Path)**
+  1. Pasien daftar & login -> input profil kesehatan.
+  2. Pasien lihat daftar dokter online -> buat order konsultasi.
+  3. Bayar konsultasi via invoice Mayar -> trigger webhook sukses.
+  4. Dokter terima konsultasi dari antrean -> konsultasi aktif.
+  5. Kirim pesan chat & upload lampiran.
+  6. Dokter terbitkan resep -> unduh PDF resep -> verifikasi QR Code.
+  7. Dokter tutup konsultasi -> status closed.
+- [ ] **Task 12.3: Uji Skenario Negatif (Edge Cases)**
+  - Pasien coba akses data pasien lain -> Wajib ditolak (403/404).
+  - Kirim chat saat status sudah ditutup -> Wajib ditolak (`INVALID_STATE`).
+  - Admin coba buka isi chat atau resep -> Wajib ditolak.
+- [ ] **Task 12.4: Deploy ke Netlify Staging & Verifikasi Live URL**
+  - Hubungkan repo GitHub ke Netlify.
+  - Masukkan semua Environment Variables di dashboard Netlify.
+  - Deploy dan uji endpoint live: `https://<site-name>.netlify.app/api/v1/health`.
+
+---
+
+## 💡 Tips & Panduan Belajar Saat Mengerjakan
+
+1. **Satu File, Satu Tanggung Jawab**:
+   - `routes.ts`: Hanya mendefinisikan URL dan metode HTTP.
+   - `schema.ts`: Hanya berisi aturan validasi form Zod.
+   - `controller.ts`: Menerima input dari pengguna dan mengembalikan respons JSON.
+   - `service.ts`: Tempat logika utama dan query ke database.
+2. **Jangan Takut Menghadapi Error**:
+   - Jika ada error di terminal, baca baris paling atas atau kata kunci `Error:` atau `ZodError`.
+   - Gunakan `console.error` saat proses *development* untuk memeriksa variabel yang bernilai `undefined`.
+3. **Komit Git Secara Berkala**:
+   - Setiap kali satu task checklist selesai dan berhasil dites, lakukan git commit:
+     `git add .`
+     `git commit -m "feat(auth): selesaikan registrasi pasien"`
+4. **Tanyakan pada Asisten AI Kapan Saja**:
+   - Kapan pun kamu bingung tentang maksud dari suatu fungsi, mintalah penjelasan:
+     *"Bantu saya kerjakan Fase 0 Task 0.1, tolong jelaskan baris kodenya dengan sederhana."*
+
+---
+
+Selamat belajar dan berkarya! Mulailah dari **Fase 0**! 🚀
+
