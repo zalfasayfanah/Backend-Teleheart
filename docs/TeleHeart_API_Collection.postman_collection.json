@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "TeleHeart API (Fase 0 - Fase 6)",
+    "name": "TeleHeart API (Fase 0 - Fase 8)",
     "description": "Koleksi API TeleHeart Backend siap pakai untuk tim Frontend (Mobile & Web).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -281,6 +281,134 @@
               "raw": "{\n  \"event\": \"payment.received\",\n  \"data\": {\n    \"productId\": \"{{mayar_invoice_id}}\",\n    \"status\": \"SUCCESS\",\n    \"paymentMethod\": \"QRIS\",\n    \"amount\": 55000,\n    \"extraData\": {\n      \"consultationId\": \"{{consultation_id}}\"\n    }\n  }\n}"
             },
             "url": "{{base_url}}/webhooks/mayar?token={{mayar_secret}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fase 7 - Alur Dokter & Konsultasi",
+      "item": [
+        {
+          "name": "1. Dokter Lihat Antrean Masuk",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{doctor_token}}" }],
+            "url": "{{base_url}}/doctors/me/queue?type=incoming"
+          }
+        },
+        {
+          "name": "2. Dokter Terima Konsultasi",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{doctor_token}}" }],
+            "url": "{{base_url}}/consultations/{{consultation_id}}/accept"
+          }
+        },
+        {
+          "name": "3. Dokter Lihat Sesi Aktif",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{doctor_token}}" }],
+            "url": "{{base_url}}/doctors/me/queue?type=active"
+          }
+        },
+        {
+          "name": "4. Dokter Lihat Riwayat Medis Pasien",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{doctor_token}}" }],
+            "url": "{{base_url}}/patients/{{patient_id}}/history"
+          }
+        },
+        {
+          "name": "5. Dokter Tutup Konsultasi",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{doctor_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctor_summary\": \"Pasien mengalami angina stabil ringan. Edukasi istirahat cukup dan kurangi kafein.\"\n}"
+            },
+            "url": "{{base_url}}/consultations/{{consultation_id}}/close"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fase 8 - Chat 1:1 & Gambar Medis",
+      "item": [
+        {
+          "name": "1. Pasien Kirim Pesan Teks",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Selamat pagi dok, dada saya terasa nyeri sejak kemarin setelah naik tangga.\"\n}"
+            },
+            "url": "{{base_url}}/consultations/{{consultation_id}}/messages"
+          }
+        },
+        {
+          "name": "2. Dokter Balas Pesan Teks",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{doctor_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Selamat pagi. Apakah nyerinya seperti tertindih beban berat dan menjalar ke punggung?\"\n}"
+            },
+            "url": "{{base_url}}/consultations/{{consultation_id}}/messages"
+          }
+        },
+        {
+          "name": "3. Pasien Kirim Gambar Lampiran Medis",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": "{{base_url}}/consultations/{{consultation_id}}/attachments"
+          }
+        },
+        {
+          "name": "4. Ambil Riwayat Pesan Chat",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/consultations/{{consultation_id}}/messages"
+          }
+        },
+        {
+          "name": "5. Tandai Pesan Telah Dibaca",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{doctor_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{base_url}}/consultations/{{consultation_id}}/messages/read"
           }
         }
       ]

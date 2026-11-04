@@ -211,16 +211,17 @@ Kerjakan **satu tahap demi satu tahap**. Jangan melompat ke tahap berikutnya seb
 ### 🟢 Fase 8: Modul Chat 1:1 & Unggah Gambar
 > **Tujuan:** Komunikasi teks dan kirim foto/dokumen antara pasien dan dokter saat sesi konsultasi aktif.
 
-- [ ] **Task 8.1: Endpoint Kirim & Ambil Pesan Chat**
+- [x] **Task 8.1: Endpoint Kirim & Ambil Pesan Chat**
   - Buat `src/modules/chat/`.
   - Validasi ketat: Pesan hanya boleh dikirim jika konsultasi berstatus `active`.
   - `POST /api/v1/consultations/:id/messages`: Kirim pesan teks.
   - `GET /api/v1/consultations/:id/messages`: Ambil riwayat chat (dengan pagination).
-- [ ] **Task 8.2: Upload Gambar Medis via Signed URL**
+- [x] **Task 8.2: Upload Gambar Medis via Signed URL & Supabase Storage**
   - Konfigurasi bucket privat di Supabase Storage (`chat-attachments`).
-  - `POST /api/v1/consultations/:id/messages/upload-url`: Generate short-lived Presigned URL agar klien bisa mengunggah gambar aman langsung ke storage.
-- [ ] **Task 8.3: Tandai Pesan Telah Dibaca (Read Status)**
-  - `PUT /api/v1/consultations/:id/messages/read`: Update status `is_read = true`.
+  - `POST /api/v1/consultations/:id/attachments`: Upload lampiran gambar medis (multipart JPG/PNG/WEBP maks 5MB) dan peroleh short-lived signed URL (300 detik).
+- [x] **Task 8.3: Tandai Pesan Telah Dibaca (Read Status)**
+  - `PATCH /api/v1/consultations/:id/messages/read`: Update status `read_at = now()` untuk pesan dari lawan bicara.
+  - **Uji coba:** 10 skenario pengujian chat lolos (total 97 tests passing).
 
 ---
 

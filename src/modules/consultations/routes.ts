@@ -10,6 +10,7 @@ import {
   closeConsultationSchema,
   rejectConsultationSchema,
 } from "./schema.js";
+import { chatRouter, attachmentRouter } from "../chat/routes.js";
 
 const consultationRouter = Router();
 
@@ -75,6 +76,10 @@ consultationRouter.get("/", ConsultationController.getConsultations);
 
 // Pasien / Dokter melihat detail konsultasi
 consultationRouter.get("/:id", ConsultationController.getConsultationDetail);
+
+// Modul Chat 1:1 & Lampiran Gambar
+consultationRouter.use("/:id/messages", chatRouter);
+consultationRouter.use("/:id/attachments", attachmentRouter);
 
 export default consultationRouter;
 

@@ -1,5 +1,11 @@
+import WebSocket from "ws";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { env } from "../config/env.js";
+
+// Polyfill native WebSocket untuk runtime Netlify / Node environment
+if (typeof (globalThis as any).WebSocket === "undefined") {
+  (globalThis as any).WebSocket = WebSocket;
+}
 
 // Client dengan Service Role Key (Admin Access: bypass RLS, manajemen akun, audit log)
 // HANYA digunakan di sisi server/backend
@@ -25,4 +31,5 @@ export const supabaseAnon: SupabaseClient = createClient(
     },
   }
 );
+
 

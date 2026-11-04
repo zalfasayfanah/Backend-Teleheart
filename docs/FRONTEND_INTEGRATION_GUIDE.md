@@ -114,6 +114,34 @@ Authorization: Bearer <access_token>
    - Status konsultasi otomatis berpindah ke `"waiting_doctor"`.
    - Dokter mendapatkan notifikasi penugasan baru dengan batas waktu konfirmasi 15 menit.
 
+### Flow 6: Antrean & Penerimaan Konsultasi oleh Dokter (Fase 7)
+1. Dokter membuka aplikasi / dashboard dan melihat antrean pasien masuk:
+   - `GET /api/v1/doctors/consultations/queue?type=incoming`: Daftar konsultasi `waiting_doctor` yang ditugaskan ke dokter ini beserta countdown sisa detik respon dokter.
+   - `GET /api/v1/doctors/consultations/queue?type=active`: Daftar sesi konsultasi yang sedang aktif ditangani.
+2. Dokter menerima atau menolak konsultasi:
+   - `POST /api/v1/consultations/:id/accept`: Dokter menerima sesi. Timer aktif (30 menit sesi), status menjadi `"active"`.
+   - `POST /api/v1/consultations/:id/reject`: Dokter menolak konsultasi dengan alasan (sistem otomatis me-reassign ke dokter lain yang tersedia).
+3. Dokter melihat rekam medis lampau pasien (riwayat konsultasi & diagnosa terdahulu):
+   - `GET /api/v1/patients/:id/history` (privasi terjaga, tanpa isi percakapan chat).
+4. Dokter mengakhiri konsultasi:
+   - `POST /api/v1/consultations/:id/close`: Dokter memberikan kesimpulan medis (`doctor_summary`), status berubah menjadi `"closed"`.
+
+### Flow 7: Chat 1:1 Real-Time & Lampiran Gambar Medis (Fase 8)
+Ruang chat hanya dapat diakses oleh pasien pemilik dan dokter yang menangani saat status `"active"`.
+1. Kirim pesan teks:
+   - `POST /api/v1/consultations/:id/messages`
+   - Body JSON: `{ "message": "Halo dok, ini hasil tes darah saya" }`
+2. Kirim gambar/foto medis (EKG, foto rontgen, dsb):
+   - `POST /api/v1/consultations/:id/attachments`
+   - Header: `Content-Type: multipart/form-data`
+   - Body form-data: `file` (File gambar: JPG/PNG/WEBP, maks 5MB)
+   - Respons memberikan signed URL berdurasi 300 detik yang aman.
+3. Ambil riwayat chat (dengan pagination):
+   - `GET /api/v1/consultations/:id/messages?limit=30&before=2026-11-04T00:00:00Z`
+4. Tandai pesan telah dibaca (Read Receipts):
+   - `PATCH /api/v1/consultations/:id/messages/read`
+   - Otomatis mencatat `read_at` untuk pesan dari lawan bicara.
+
 ---
 
 ## 📋 6. Ringkasan Status Konsultasi (State Machine)
@@ -123,7 +151,7 @@ Authorization: Bearer <access_token>
 | `draft` | Konsultasi baru dibuat | Pasien mengisi tanda vital awal |
 | `waiting_payment` | Invoice Mayar telah diterbitkan | Pasien menyelesaikan pembayaran |
 | `waiting_doctor` | Pembayaran lunas, mencari/menunggu respon dokter | Menunggu dokter konfirmasi (maks 15 menit) |
-| `active` | Dokter menerima konsultasi *(Fase 7)* | Ruang chat aktif |
-| `closed` | Konsultasi selesai & resep obat terbit *(Fase 7-9)* | Selesai |
+| `active` | Dokter menerima konsultasi *(Fase 7)* | Ruang chat aktif (Fase 8) |
+| `closed` | Konsultasi selesai & resep obat terbit *(Fase 7-9)* | Konsultasi ditutup dokter dengan ringkasan medis |
 | `cancelled` | Dibatalkan sebelum bayar | Konsultasi batal |
 
