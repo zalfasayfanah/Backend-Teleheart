@@ -5,12 +5,30 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:8888/api/v1" },
-    { "key": "access_token", "value": "" },
-    { "key": "doctor_token", "value": "" },
-    { "key": "consultation_id", "value": "" },
-    { "key": "mayar_invoice_id", "value": "" },
-    { "key": "mayar_secret", "value": "" }
+    {
+      "key": "base_url",
+      "value": "http://localhost:8888/api/v1"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "doctor_token",
+      "value": ""
+    },
+    {
+      "key": "consultation_id",
+      "value": ""
+    },
+    {
+      "key": "mayar_invoice_id",
+      "value": ""
+    },
+    {
+      "key": "mayar_secret",
+      "value": ""
+    }
   ],
   "item": [
     {
@@ -33,7 +51,12 @@
           "name": "1. Registrasi Pasien Baru",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"full_name\": \"Zalfa Pasien\",\n  \"nik\": \"3201010101900001\",\n  \"birth_date\": \"1995-04-23\",\n  \"gender\": \"male\",\n  \"phone\": \"081234567890\",\n  \"email\": \"pasien@teleheart.id\",\n  \"password\": \"password123\",\n  \"consents\": [\n    { \"consent_type\": \"privacy_policy\", \"version\": \"1.0\" },\n    { \"consent_type\": \"medical_data_processing\", \"version\": \"1.0\" }\n  ]\n}"
@@ -45,7 +68,12 @@
           "name": "2. Registrasi Dokter Baru",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"full_name\": \"dr. Siti Sp.JP\",\n  \"email\": \"dr.siti@teleheart.id\",\n  \"password\": \"password123\",\n  \"str_number\": \"STR-1234567890\",\n  \"sip_number\": \"SIP-1234567890\",\n  \"specialization\": \"Spesialis Jantung dan Pembuluh Darah\",\n  \"workplace\": \"RS Jantung Harapan\",\n  \"consents\": [\n    { \"consent_type\": \"privacy_policy\", \"version\": \"1.0\" },\n    { \"consent_type\": \"medical_data_processing\", \"version\": \"1.0\" }\n  ]\n}"
@@ -58,8 +86,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "X-Client-Platform", "value": "mobile" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Client-Platform",
+                "value": "mobile"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -73,8 +107,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "X-Client-Platform", "value": "web" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Client-Platform",
+                "value": "web"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -87,7 +127,12 @@
           "name": "5. Ambil Info Akun Login (/me)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": "{{base_url}}/me"
           }
         }
@@ -100,7 +145,12 @@
           "name": "1. Ambil Profil Sendiri (NIK Termasking)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": "{{base_url}}/patients/me/profile"
           }
         },
@@ -109,8 +159,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -124,8 +180,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -139,8 +201,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -154,8 +222,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -190,8 +264,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{doctor_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{doctor_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -210,8 +290,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -225,8 +311,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -239,7 +331,12 @@
           "name": "3. Detail Konsultasi",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": "{{base_url}}/consultations/{{consultation_id}}"
           }
         },
@@ -247,7 +344,12 @@
           "name": "4. Riwayat Konsultasi",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": "{{base_url}}/consultations"
           }
         }
@@ -261,8 +363,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -275,7 +383,12 @@
           "name": "2. Simulasi Webhook Mayar (Sukses Bayar)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"event\": \"payment.received\",\n  \"data\": {\n    \"productId\": \"{{mayar_invoice_id}}\",\n    \"status\": \"SUCCESS\",\n    \"paymentMethod\": \"QRIS\",\n    \"amount\": 55000,\n    \"extraData\": {\n      \"consultationId\": \"{{consultation_id}}\"\n    }\n  }\n}"
@@ -292,7 +405,12 @@
           "name": "1. Dokter Lihat Antrean Masuk",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{doctor_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{doctor_token}}"
+              }
+            ],
             "url": "{{base_url}}/doctors/me/queue?type=incoming"
           }
         },
@@ -300,7 +418,12 @@
           "name": "2. Dokter Terima Konsultasi",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{doctor_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{doctor_token}}"
+              }
+            ],
             "url": "{{base_url}}/consultations/{{consultation_id}}/accept"
           }
         },
@@ -308,7 +431,12 @@
           "name": "3. Dokter Lihat Sesi Aktif",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{doctor_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{doctor_token}}"
+              }
+            ],
             "url": "{{base_url}}/doctors/me/queue?type=active"
           }
         },
@@ -316,7 +444,12 @@
           "name": "4. Dokter Lihat Riwayat Medis Pasien",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{doctor_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{doctor_token}}"
+              }
+            ],
             "url": "{{base_url}}/patients/{{patient_id}}/history"
           }
         },
@@ -325,8 +458,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{doctor_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{doctor_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -345,8 +484,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -360,8 +505,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{doctor_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{doctor_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -374,7 +525,12 @@
           "name": "3. Pasien Kirim Gambar Lampiran Medis",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -392,7 +548,12 @@
           "name": "4. Ambil Riwayat Pesan Chat",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": "{{base_url}}/consultations/{{consultation_id}}/messages"
           }
         },
@@ -401,8 +562,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{doctor_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{doctor_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -421,8 +588,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{doctor_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{doctor_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -436,8 +609,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{doctor_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{doctor_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -451,7 +630,10 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/consultations/{{consultation_id}}/prescription"
           }
@@ -461,7 +643,10 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/prescriptions/{{prescription_id}}/download"
           }
@@ -483,8 +668,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -498,7 +689,10 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/notifications?limit=20"
           }
@@ -508,7 +702,10 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/notifications/{{notification_id}}/read"
           }
@@ -518,7 +715,10 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/notifications/read-all"
           }
@@ -528,8 +728,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{patient_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{patient_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -543,13 +749,185 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{patient_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{patient_token}}"
+              }
             ],
             "url": "{{base_url}}/predictions/my-history?limit=10"
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Modul Admin & Audit Trail",
+      "item": [
+        {
+          "name": "1. Daftar Seluruh Pengguna Sistem",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users?page=1&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Melihat seluruh pengguna (dokter, pasien, admin) dengan pagination dan filter role/search."
+          }
+        },
+        {
+          "name": "2. Filter Pasien (NIK Ter-masking)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users?role=patient",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "patient"
+                }
+              ]
+            },
+            "description": "Memastikan NIK pasien terlindungi dan di-masking (************0001) sesuai standar privasi UU PDP."
+          }
+        },
+        {
+          "name": "3. Laporan Transaksi Keuangan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/transactions?status=paid&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "paid"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Laporan keuangan dan status pembayaran (total revenue, paid, pending, refund) tanpa memuat rekam medis klinis."
+          }
+        },
+        {
+          "name": "4. Audit Log Aktivitas Sistem",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/audit-logs?limit=50",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "audit-logs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Audit trail aktivitas sensitif (akses rekam medis, approval dokter, refund) lengkap dengan IP address & user agent."
+          }
+        },
+        {
+          "name": "5. Proses Refund Transaksi",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_id\": \"{{payment_id}}\",\n  \"reason\": \"Dokter berhalangan dan konsultasi dibatalkan sistem\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/refunds",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "refunds"
+              ]
+            },
+            "description": "Admin memproses refund transaksi yang sudah berstatus paid, mengubah status menjadi refunded dan mencatat audit log."
           }
         }
       ]
     }
   ]
 }
-

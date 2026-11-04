@@ -13,3 +13,4 @@ predictionRouter.post("/", PredictionController.save);
 predictionRouter.get("/my-history", PredictionController.getMyHistory);
 
 export default predictionRouter;
+

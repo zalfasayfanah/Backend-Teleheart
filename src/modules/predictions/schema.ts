@@ -29,3 +29,4 @@ export const getPredictionsQuerySchema = z.object({
 
 export type CreatePredictionLogInput = z.infer<typeof createPredictionLogSchema>;
 export type GetPredictionsQueryInput = z.infer<typeof getPredictionsQuerySchema>;
+

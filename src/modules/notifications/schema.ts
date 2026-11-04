@@ -19,3 +19,4 @@ export const getNotificationsQuerySchema = z.object({
 
 export type RegisterDeviceTokenInput = z.infer<typeof registerDeviceTokenSchema>;
 export type GetNotificationsQueryInput = z.infer<typeof getNotificationsQuerySchema>;
+

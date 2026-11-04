@@ -4,6 +4,7 @@ import { evaluateVitalSigns } from "./vitalSignsEvaluator.js";
 import { CreateConsultationInput, SubmitVitalsInput, CheckoutInput } from "./schema.js";
 import { mayarClient } from "../../lib/mayar.js";
 import { FcmService } from "../../lib/fcm.js";
+import { logAudit } from "../../lib/audit.js";
 import { env } from "../../config/env.js";
 
 export class ConsultationService {
@@ -1092,6 +1093,17 @@ export class ConsultationService {
     if (error) {
       throw new AppError(500, "DATABASE_ERROR", "Gagal mengambil riwayat konsultasi pasien");
     }
+
+    // Catat log audit akses data rekam medis pasien oleh dokter
+    await logAudit({
+      actor_id: doctorId,
+      actor_role: "doctor",
+      action: "view_patient_medical_history",
+      resource_type: "patient_history",
+      resource_id: patientId,
+      patient_id: patientId,
+      metadata: { total_consultations: pastConsultations?.length || 0 },
+    });
 
     const historyResults = [];
     for (const cons of pastConsultations || []) {

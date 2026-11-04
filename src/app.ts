@@ -9,6 +9,7 @@ import {
   adminDoctorRouter,
   platformFeeRouter,
 } from "./modules/doctors/routes.js";
+import adminRouter from "./modules/admin/routes.js";
 import consultationRouter from "./modules/consultations/routes.js";
 import {
   prescriptionRouter,
@@ -49,6 +50,7 @@ apiV1Router.use("/auth", authRouter);
 apiV1Router.use("/patients", patientRouter);
 apiV1Router.use("/doctors", doctorRouter);
 apiV1Router.use("/admin/doctors", adminDoctorRouter);
+apiV1Router.use("/admin", adminRouter);
 apiV1Router.use("/platform-fee", platformFeeRouter);
 apiV1Router.use("/consultations", consultationRouter);
 apiV1Router.use("/prescriptions", prescriptionRouter);

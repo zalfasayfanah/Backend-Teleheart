@@ -1,4 +1,4 @@
-# 📱 Panduan Integrasi Frontend TeleHeart (Fase 0 - Fase 6)
+# 📱 Panduan Integrasi Frontend & Web TeleHeart (Fase 0 - Fase 11)
 
 Dokumen ini ditujukan untuk tim Frontend (**Mobile App Pasien** dan **Web Portal Dokter**) agar dapat langsung menghubungkan tampilan antarmuka ke Backend TeleHeart.
 
@@ -219,6 +219,30 @@ Sesuai aturan keamanan & privasi medis (PRD): model AI machine learning risiko k
 2. Pasien Melihat Riwayat Prediksi Mandiri:
    - `GET /api/v1/predictions/my-history?limit=10`
    - *Catatan Privasi:* Endpoint ini diproteksi ketat. Dokter maupun Admin dilarang mengakses data prediksi mandiri pasien (403 Forbidden).
+
+### Flow 11: Portal Khusus Admin & Audit Trail (Fase 11)
+Endpoint khusus dashboard manajemen sistem (`role: "admin"`). Dilindungi oleh role guard ketat (`requireRole("admin")`) di mana pasien dan dokter akan otomatis ditolak (403 Forbidden). Sesuai regulasi privasi UU PDP: **Admin tidak memiliki akses ke rekam medis klinis pasien** (keluhan, tanda vital, diagnosa, dan pesan chat dilarang tampil).
+
+1. Daftar Seluruh Pengguna Sistem:
+   - `GET /api/v1/admin/users?page=1&limit=20` (Query params opsional: `role=patient|doctor|admin`, `search=nama/email`).
+   - Khusus profil pasien, NIK otomatis dienkripsi & dimasking (`************0001`) agar data kependudukan tetap aman.
+2. Laporan Transaksi Keuangan:
+   - `GET /api/v1/admin/transactions?status=paid&limit=20`
+   - Menampilkan daftar transaksi pembayaran dan ringkasan keuangan (`meta.summary.total_revenue`, `total_paid`, `total_refunded`).
+3. Audit Log Aktivitas Sistem:
+   - `GET /api/v1/admin/audit-logs?limit=50`
+   - Melacak seluruh akses sensitif sistem (dokter melihat rekam medis pasien, verifikasi dokter, dan refund admin) lengkap dengan IP address dan user agent.
+4. Proses Refund Transaksi:
+   - `POST /api/v1/admin/refunds`
+   - Headers: `Authorization: Bearer <admin_token>`
+   - Body:
+     ```json
+     {
+       "payment_id": "<payment_uuid>",
+       "reason": "Konsultasi dibatalkan sistem karena dokter tidak merespon"
+     }
+     ```
+   - Otomatis memperbarui status transaksi menjadi `refunded`, mengirimkan push notifikasi ke pasien, dan mencatat log audit.
 
 ---
 

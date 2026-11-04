@@ -273,15 +273,16 @@ Kerjakan **satu tahap demi satu tahap**. Jangan melompat ke tahap berikutnya seb
 ### 🟢 Fase 11: Modul Admin, Audit Trail & Keamanan Khusus
 > **Tujuan:** Dashboard pengelolaan admin tanpa melanggar privasi data medis pasien.
 
-- [ ] **Task 11.1: Audit Logging Terpusat**
+- [x] **Task 11.1: Audit Logging Terpusat**
   - Buat `src/lib/audit.ts`.
   - Catat setiap akses dokter ke data medis pasien (nama dokter, ID pasien, aksi yang diakses, timestamp, IP).
-- [ ] **Task 11.2: Endpoint Khusus Admin (Metadata Only)**
+- [x] **Task 11.2: Endpoint Khusus Admin (Metadata Only)**
   - Buat `src/modules/admin/`.
-  - `GET /api/v1/admin/users`: Daftar pengguna sistem (pasien & dokter).
+  - `GET /api/v1/admin/users`: Daftar pengguna sistem (pasien & dokter dengan NIK ter-masking).
   - `GET /api/v1/admin/transactions`: Laporan keuangan & transaksi pembayaran (hanya nominal, status bayar, ID transaksi; **tanpa diagnosis medis**).
   - `GET /api/v1/admin/audit-logs`: Melihat log aktivitas sistem.
   - `POST /api/v1/admin/refunds`: Memproses pengembalian dana jika konsultasi gagal/batal.
+  - **Uji coba:** 12 skenario pengujian modul admin lolos (total 139 tests passing).
 
 ---
 
