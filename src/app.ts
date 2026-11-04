@@ -10,6 +10,10 @@ import {
   platformFeeRouter,
 } from "./modules/doctors/routes.js";
 import consultationRouter from "./modules/consultations/routes.js";
+import {
+  prescriptionRouter,
+  publicPrescriptionRouter,
+} from "./modules/prescriptions/routes.js";
 import webhookRouter from "./modules/payments/routes.js";
 import jobsRouter from "./modules/jobs/routes.js";
 import { AuthController } from "./modules/auth/controller.js";
@@ -45,6 +49,8 @@ apiV1Router.use("/doctors", doctorRouter);
 apiV1Router.use("/admin/doctors", adminDoctorRouter);
 apiV1Router.use("/platform-fee", platformFeeRouter);
 apiV1Router.use("/consultations", consultationRouter);
+apiV1Router.use("/prescriptions", prescriptionRouter);
+apiV1Router.use("/public/prescriptions", publicPrescriptionRouter);
 apiV1Router.use("/webhooks", webhookRouter);
 apiV1Router.use("/jobs", jobsRouter);
 apiV1Router.get("/me", authMiddleware, AuthController.getMe);

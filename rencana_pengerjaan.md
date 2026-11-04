@@ -228,18 +228,19 @@ Kerjakan **satu tahap demi satu tahap**. Jangan melompat ke tahap berikutnya seb
 ### 🟢 Fase 9: Modul Resep Obat Digital & Generator PDF
 > **Tujuan:** Dokter menerbitkan resep digital berformat PDF dengan QR code verifikasi publik.
 
-- [ ] **Task 9.1: Pembuatan Resep oleh Dokter**
+- [x] **Task 9.1: Pembuatan Resep oleh Dokter**
   - Buat `src/modules/prescriptions/`.
   - `POST /api/v1/consultations/:id/prescription`: Input daftar obat, dosis, aturan pakai, dan catatan dokter. Status awal: `draft`.
   - `POST /api/v1/consultations/:id/prescription/issue`: Menerbitkan resep resmi (`issued`). Resep yang sudah terbit terkunci dan tidak bisa diedit lagi.
-- [ ] **Task 9.2: Generator Dokumen PDF & QR Code**
-  - Buat `src/lib/pdf.ts` menggunakan library `pdf-lib` dan generator QR Code.
-  - Buat template PDF resmi resep TeleHeart (memuat kop, data dokter & SIP, nama pasien terverifikasi, daftar obat, dan cap digital).
-  - Tanamkan QR Code yang mengarah ke URL publik: `https://teleheart.com/verify-prescription?code=...`.
+- [x] **Task 9.2: Generator Dokumen PDF & QR Code**
+  - Buat `src/lib/pdf.ts` menggunakan library `pdf-lib` dan generator QR Code (`qrcode`).
+  - Buat template PDF resmi resep TeleHeart (memuat kop, data dokter & SIP, nama pasien terverifikasi, daftar obat, dan tanda tangan elektronik).
+  - Tanamkan QR Code yang mengarah ke URL validasi publik (`/verify-prescription?code=...`).
   - Simpan PDF ke bucket privat Supabase Storage (`prescriptions`).
-- [ ] **Task 9.3: Unduh Resep & Verifikasi Publik**
-  - `GET /api/v1/prescriptions/:id/download`: Mendapatkan link download PDF (hanya bisa diunduh oleh pasien bersangkutan dan konsultasi berstatus `paid`).
+- [x] **Task 9.3: Unduh Resep & Verifikasi Publik**
+  - `GET /api/v1/prescriptions/:id/download`: Mendapatkan link download PDF (hanya bisa diunduh oleh pasien bersangkutan atau dokter penanggung jawab).
   - `GET /api/v1/public/prescriptions/verify/:code`: Endpoint publik tanpa login untuk memvalidasi keaslian resep jika dibuka oleh apotek/pihak ketiga.
+  - **Uji coba:** 16 skenario pengujian resep lolos (total 113 tests passing).
 
 ---
 

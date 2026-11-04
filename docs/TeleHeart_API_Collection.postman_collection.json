@@ -412,6 +412,68 @@
           }
         }
       ]
+    },
+    {
+      "name": "09. Resep Digital & PDF Generator",
+      "item": [
+        {
+          "name": "1. Dokter Simpan Draft Resep",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{doctor_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Minum obat secara teratur setelah makan. Evaluasi tensi setelah 2 minggu.\",\n  \"items\": [\n    {\n      \"medicine_name\": \"Atorvastatin 20mg\",\n      \"dosage\": \"20 mg\",\n      \"instructions\": \"1x sehari 1 tablet malam hari sesudah makan\",\n      \"quantity\": \"30 tablet\",\n      \"notes\": \"Minum malam hari\"\n    },\n    {\n      \"medicine_name\": \"Bisoprolol 2.5mg\",\n      \"dosage\": \"2.5 mg\",\n      \"instructions\": \"1x sehari 1 tablet pagi hari sesudah makan\",\n      \"quantity\": \"30 tablet\"\n    }\n  ]\n}"
+            },
+            "url": "{{base_url}}/consultations/{{consultation_id}}/prescription"
+          }
+        },
+        {
+          "name": "2. Dokter Terbitkan Resep Resmi & Generate PDF",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{doctor_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{base_url}}/consultations/{{consultation_id}}/prescription/issue"
+          }
+        },
+        {
+          "name": "3. Pasien/Dokter Lihat Detail Resep",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/consultations/{{consultation_id}}/prescription"
+          }
+        },
+        {
+          "name": "4. Dapatkan Signed URL Unduh PDF Resep",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/prescriptions/{{prescription_id}}/download"
+          }
+        },
+        {
+          "name": "5. Verifikasi Keaslian Resep Terbuka (Public / Apotek)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/public/prescriptions/verify/{{verification_code}}"
+          }
+        }
+      ]
     }
   ]
 }

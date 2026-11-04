@@ -142,6 +142,46 @@ Ruang chat hanya dapat diakses oleh pasien pemilik dan dokter yang menangani saa
    - `PATCH /api/v1/consultations/:id/messages/read`
    - Otomatis mencatat `read_at` untuk pesan dari lawan bicara.
 
+### Flow 8: Resep Obat Digital & Generator PDF dengan QR Code (Fase 9)
+Setelah diagnosis dilakukan, dokter dapat membuat resep obat digital yang diterbitkan resmi dalam bentuk dokumen PDF berstandar medis lengkap dengan QR code verifikasi:
+1. Dokter membuat / mengubah draft resep:
+   - `POST /api/v1/consultations/:id/prescription`
+   - Headers: `Authorization: Bearer <doctor_token>`
+   - Body JSON:
+     ```json
+     {
+       "notes": "Minum obat teratur setelah makan. Kontrol tensi setiap pagi.",
+       "items": [
+         {
+           "medicine_name": "Atorvastatin 20mg",
+           "dosage": "20 mg",
+           "instructions": "1x sehari 1 tablet malam hari",
+           "quantity": "30 tablet",
+           "notes": "Minum malam hari"
+         }
+       ]
+     }
+     ```
+2. Dokter menerbitkan resep resmi (`issued`):
+   - `POST /api/v1/consultations/:id/prescription/issue`
+   - Headers: `Authorization: Bearer <doctor_token>`
+   - Backend otomatis meng-generate:
+     - Nomor resep unik (`TH-RX-YYYYMM-XXXX`)
+     - Dokumen PDF resmi (Kop klinik, data dokter + SIP, nama pasien, tabel obat R/, catatan)
+     - QR code verifikasi publik
+     - Menyimpan berkas ke Supabase Storage dan mengembalikan `download_url`.
+   - *Catatan Penting:* Resep yang sudah `issued` dikunci secara permanen (*immutable*) dan tidak dapat diedit kembali.
+3. Pasien atau Dokter melihat resep:
+   - `GET /api/v1/consultations/:id/prescription`
+   - Mengembalikan detail obat dan `download_url` jika sudah diterbitkan.
+4. Pasien mengunduh dokumen PDF:
+   - `GET /api/v1/prescriptions/:id/download`
+   - Mengembalikan signed URL unduhan dokumen PDF.
+5. Verifikasi Keaslian Resep Terbuka (Public / Pihak Apotek):
+   - `GET /api/v1/public/prescriptions/verify/:code`
+   - *Tanpa perlu header Authorization*.
+   - Mengembalikan status validitas `is_valid: true`, identitas dokter penerbit & SIP, nama pasien, dan rincian obat.
+
 ---
 
 ## 📋 6. Ringkasan Status Konsultasi (State Machine)

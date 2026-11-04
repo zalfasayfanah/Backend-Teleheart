@@ -11,6 +11,7 @@ import {
   rejectConsultationSchema,
 } from "./schema.js";
 import { chatRouter, attachmentRouter } from "../chat/routes.js";
+import { prescriptionConsultationRouter } from "../prescriptions/routes.js";
 
 const consultationRouter = Router();
 
@@ -80,6 +81,9 @@ consultationRouter.get("/:id", ConsultationController.getConsultationDetail);
 // Modul Chat 1:1 & Lampiran Gambar
 consultationRouter.use("/:id/messages", chatRouter);
 consultationRouter.use("/:id/attachments", attachmentRouter);
+
+// Modul Resep Digital Dokter
+consultationRouter.use("/:id/prescription", prescriptionConsultationRouter);
 
 export default consultationRouter;
 
