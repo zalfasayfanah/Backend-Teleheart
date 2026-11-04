@@ -378,3 +378,4 @@ export class PrescriptionPdfGenerator {
     return Buffer.from(pdfBytes);
   }
 }
+

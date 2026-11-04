@@ -3,6 +3,7 @@ import { AppError } from "../../middleware/errorHandler.js";
 import { evaluateVitalSigns } from "./vitalSignsEvaluator.js";
 import { CreateConsultationInput, SubmitVitalsInput, CheckoutInput } from "./schema.js";
 import { mayarClient } from "../../lib/mayar.js";
+import { FcmService } from "../../lib/fcm.js";
 import { env } from "../../config/env.js";
 
 export class ConsultationService {
@@ -747,8 +748,8 @@ export class ConsultationService {
       .eq("id", doctorId)
       .single();
 
-    await supabaseAdmin.from("notifications").insert({
-      user_id: consultation.patient_id,
+    await FcmService.sendInAppAndPushNotification({
+      userId: consultation.patient_id,
       type: "consultation_accepted",
       title: "Konsultasi Dimulai",
       body: `${docUser?.full_name || "Dokter"} telah menerima sesi konsultasi Anda. Ruang chat aktif.`,
@@ -1034,8 +1035,8 @@ export class ConsultationService {
     }
 
     // Notifikasi penutupan ke pasien
-    await supabaseAdmin.from("notifications").insert({
-      user_id: consultation.patient_id,
+    await FcmService.sendInAppAndPushNotification({
+      userId: consultation.patient_id,
       type: "consultation_closed",
       title: "Konsultasi Selesai",
       body: "Dokter telah menyelesaikan sesi konsultasi. Anda dapat melihat ringkasan medis di aplikasi.",

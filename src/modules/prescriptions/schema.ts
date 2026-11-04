@@ -27,3 +27,4 @@ export const savePrescriptionSchema = z.object({
 
 export type SavePrescriptionInput = z.infer<typeof savePrescriptionSchema>;
 export type PrescriptionItemInput = z.infer<typeof prescriptionItemSchema>;
+

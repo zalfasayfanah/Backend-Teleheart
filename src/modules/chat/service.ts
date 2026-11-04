@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { supabaseAdmin } from "../../lib/supabase.js";
 import { AppError } from "../../middleware/errorHandler.js";
 import { StorageService } from "../../lib/storage.js";
+import { FcmService } from "../../lib/fcm.js";
 import { GetMessagesQueryInput } from "./schema.js";
 
 const ATTACHMENT_BUCKET = "chat-attachments";
@@ -67,8 +68,8 @@ export class ChatService {
 
     if (recipientId) {
       const previewText = body.length > 50 ? body.substring(0, 47) + "..." : body;
-      await supabaseAdmin.from("notifications").insert({
-        user_id: recipientId,
+      await FcmService.sendInAppAndPushNotification({
+        userId: recipientId,
         type: "new_chat_message",
         title: "Pesan Baru",
         body: previewText,
@@ -148,8 +149,8 @@ export class ChatService {
       consultation.patient_id === senderId ? consultation.doctor_id : consultation.patient_id;
 
     if (recipientId) {
-      await supabaseAdmin.from("notifications").insert({
-        user_id: recipientId,
+      await FcmService.sendInAppAndPushNotification({
+        userId: recipientId,
         type: "new_chat_message",
         title: "Pesan Gambar Baru",
         body: "Mengirimkan lampiran gambar medis",

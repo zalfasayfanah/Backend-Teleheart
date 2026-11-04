@@ -474,6 +474,81 @@
           }
         }
       ]
+    },
+    {
+      "name": "10. Notifikasi & Log Prediksi AI",
+      "item": [
+        {
+          "name": "1. Daftarkan Token FCM Perangkat",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fcm_token\": \"fcm_sample_token_device_abc123\",\n  \"platform\": \"android\"\n}"
+            },
+            "url": "{{base_url}}/notifications/token"
+          }
+        },
+        {
+          "name": "2. Ambil Notifikasi In-App",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/notifications?limit=20"
+          }
+        },
+        {
+          "name": "3. Tandai Notifikasi Dibaca",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/notifications/{{notification_id}}/read"
+          }
+        },
+        {
+          "name": "4. Tandai Seluruh Notifikasi Dibaca",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/notifications/read-all"
+          }
+        },
+        {
+          "name": "5. Pasien Simpan Log Prediksi Risiko AI",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{patient_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"male\": true,\n  \"age\": 45,\n  \"current_smoker\": true,\n  \"cigs_per_day\": 10,\n  \"sys_bp\": 140.0,\n  \"dia_bp\": 90.0,\n  \"total_cholesterol\": 220.0,\n  \"bmi\": 26.5,\n  \"heart_rate\": 80.0,\n  \"result\": \"at_risk\",\n  \"model_version\": \"v1.0-flutter-tflite\"\n}"
+            },
+            "url": "{{base_url}}/predictions"
+          }
+        },
+        {
+          "name": "6. Pasien Lihat Riwayat Prediksi AI Miliknya",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{patient_token}}" }
+            ],
+            "url": "{{base_url}}/predictions/my-history?limit=10"
+          }
+        }
+      ]
     }
   ]
 }

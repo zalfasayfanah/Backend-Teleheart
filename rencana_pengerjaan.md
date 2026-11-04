@@ -247,19 +247,26 @@ Kerjakan **satu tahap demi satu tahap**. Jangan melompat ke tahap berikutnya seb
 ### 🟢 Fase 10: Notifikasi Push (Firebase FCM) & Log Prediksi AI
 > **Tujuan:** Mengirim notifikasi push ke handphone pasien saat ada pesan chat/status berubah dan mencatat riwayat prediksi jantung.
 
-- [ ] **Task 10.1: Integrasi Firebase Admin SDK**
-  - Buat `src/lib/fcm.ts` dengan service account credential Firebase.
-  - Fungsi kirim pesan push ke perangkat: `sendPushNotification(fcmToken, title, body, dataPayload)`.
-- [ ] **Task 10.2: Pendaftaran Token Perangkat Pasien/Dokter**
-  - `POST /api/v1/notifications/token`: Menyimpan atau memperbarui FCM token perangkat pengguna saat login.
-- [ ] **Task 10.3: Picu Notifikasi Otomatis**
-  - Notifikasi saat dokter menerima konsultasi.
-  - Notifikasi saat ada pesan chat baru masuk.
-  - Notifikasi saat resep obat selesai diterbitkan.
-- [ ] **Task 10.4: Penyimpanan Hasil Prediksi Risiko Jantung**
+- [x] **Task 10.1: Integrasi Firebase Admin SDK & FCM v1**
+  - Buat `src/lib/fcm.ts` dengan otentikasi Google Service Account native RS256 tanpa dependensi bengkak.
+  - Fungsi kirim pesan push ke perangkat: `sendPushNotification(tokens, title, body, dataPayload)`.
+  - Helper pengiriman ganda: Simpan ke tabel `notifications` (In-App) dan kirim Push Notification (FCM).
+- [x] **Task 10.2: Pendaftaran Token Perangkat Pasien/Dokter**
+  - `POST /api/v1/notifications/token`: Menyimpan atau memperbarui FCM token perangkat pengguna.
+  - `DELETE /api/v1/notifications/token`: Menghapus token perangkat saat logout.
+  - `GET /api/v1/notifications`: Mengambil daftar notifikasi in-app pengguna beserta counter belum dibaca (`unread_count`).
+  - `PATCH /api/v1/notifications/:id/read` & `PATCH /api/v1/notifications/read-all`: Menandai notifikasi telah dibaca.
+- [x] **Task 10.3: Picu Notifikasi Otomatis**
+  - Terintegrasi otomatis pada:
+    - Dokter menerima konsultasi (`consultation_accepted`).
+    - Pesan chat teks atau lampiran gambar medis masuk (`new_chat_message`).
+    - Resep obat elektronik diterbitkan (`prescription_issued`).
+    - Dokter menyelesaikan konsultasi (`consultation_closed`).
+- [x] **Task 10.4: Penyimpanan Hasil Prediksi Risiko Jantung**
   - Sesuai aturan keamanan: Prediksi dihitung on-device di aplikasi Flutter, backend hanya menerima hasil kesimpulan.
-  - `POST /api/v1/predictions`: Simpan skor risiko (`low`, `moderate`, `high`) dan timestamp.
+  - `POST /api/v1/predictions`: Simpan skor risiko (`at_risk` atau `not_at_risk`), parameter kardiovaskular, dan rekomendasi awal.
   - `GET /api/v1/predictions/my-history`: Pasien melihat riwayat risiko jantungnya sendiri. (Catatan: Dokter & Admin dilarang membaca data ini sesuai BR).
+  - **Uji coba:** 14 skenario pengujian notifikasi & prediksi lolos (total 127 tests passing).
 
 ---
 

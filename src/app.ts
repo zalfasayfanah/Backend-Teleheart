@@ -14,6 +14,8 @@ import {
   prescriptionRouter,
   publicPrescriptionRouter,
 } from "./modules/prescriptions/routes.js";
+import notificationRouter from "./modules/notifications/routes.js";
+import predictionRouter from "./modules/predictions/routes.js";
 import webhookRouter from "./modules/payments/routes.js";
 import jobsRouter from "./modules/jobs/routes.js";
 import { AuthController } from "./modules/auth/controller.js";
@@ -51,6 +53,8 @@ apiV1Router.use("/platform-fee", platformFeeRouter);
 apiV1Router.use("/consultations", consultationRouter);
 apiV1Router.use("/prescriptions", prescriptionRouter);
 apiV1Router.use("/public/prescriptions", publicPrescriptionRouter);
+apiV1Router.use("/notifications", notificationRouter);
+apiV1Router.use("/predictions", predictionRouter);
 apiV1Router.use("/webhooks", webhookRouter);
 apiV1Router.use("/jobs", jobsRouter);
 apiV1Router.get("/me", authMiddleware, AuthController.getMe);

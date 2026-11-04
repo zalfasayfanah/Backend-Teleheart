@@ -3,6 +3,7 @@ import { supabaseAdmin } from "../../lib/supabase.js";
 import { AppError } from "../../middleware/errorHandler.js";
 import { StorageService } from "../../lib/storage.js";
 import { PrescriptionPdfGenerator } from "../../lib/pdf.js";
+import { FcmService } from "../../lib/fcm.js";
 import { SavePrescriptionInput } from "./schema.js";
 
 const PRESCRIPTION_BUCKET = "prescriptions";
@@ -267,9 +268,9 @@ export class PrescriptionService {
       throw new AppError(500, "DATABASE_ERROR", "Gagal memperbarui status resep resmi");
     }
 
-    // 8. Kirim notifikasi ke Pasien
-    await supabaseAdmin.from("notifications").insert({
-      user_id: consultation.patient_id,
+    // 8. Kirim notifikasi in-app & push notification ke Pasien
+    await FcmService.sendInAppAndPushNotification({
+      userId: consultation.patient_id,
       type: "prescription_issued",
       title: "Resep Obat Elektronik Diterbitkan",
       body: `Dokter ${doctorName} telah menerbitkan resep elektronik (${verificationCode}) untuk Anda.`,
@@ -473,3 +474,4 @@ export class PrescriptionService {
     };
   }
 }
+

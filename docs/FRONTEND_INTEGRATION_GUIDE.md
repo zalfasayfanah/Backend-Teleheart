@@ -182,6 +182,44 @@ Setelah diagnosis dilakukan, dokter dapat membuat resep obat digital yang diterb
    - *Tanpa perlu header Authorization*.
    - Mengembalikan status validitas `is_valid: true`, identitas dokter penerbit & SIP, nama pasien, dan rincian obat.
 
+### Flow 9: Pendaftaran Push Notifications & Pengelolaan In-App Notifications (Fase 10)
+Aplikasi mobile (Flutter) atau Web dapat mendaftarkan token Firebase Cloud Messaging (FCM) agar pengguna menerima notifikasi push saat ada pesan chat baru, dokter menerima konsultasi, resep obat diterbitkan, atau sesi ditutup:
+1. Daftarkan / Perbarui Token Perangkat saat Login:
+   - `POST /api/v1/notifications/token`
+   - Headers: `Authorization: Bearer <access_token>`
+   - Body: `{ "fcm_token": "...", "platform": "android" }`
+2. Ambil Daftar Notifikasi In-App:
+   - `GET /api/v1/notifications?limit=20&is_read=false`
+   - Mengembalikan daftar notifikasi dan metadata `unread_count` untuk badge aplikasi.
+3. Tandai Notifikasi Telah Dibaca:
+   - 1 Notifikasi: `PATCH /api/v1/notifications/:id/read`
+   - Seluruh Notifikasi: `PATCH /api/v1/notifications/read-all`
+4. Hapus Token saat Logout:
+   - `DELETE /api/v1/notifications/token` (Body: `{ "fcm_token": "..." }`)
+
+### Flow 10: Log Prediksi AI Risiko Jantung On-Device (Fase 10)
+Sesuai aturan keamanan & privasi medis (PRD): model AI machine learning risiko kardiovaskular dijalankan **secara lokal di aplikasi klien (On-Device ML via TensorFlow Lite)**. Backend hanya menerima data parameter dan kesimpulan akhir:
+1. Pasien Menyimpan Riwayat Prediksi:
+   - `POST /api/v1/predictions`
+   - Headers: `Authorization: Bearer <patient_token>`
+   - Body:
+     ```json
+     {
+       "age": 45,
+       "male": true,
+       "current_smoker": true,
+       "sys_bp": 140,
+       "dia_bp": 90,
+       "total_cholesterol": 220,
+       "result": "at_risk",
+       "model_version": "v1.0-flutter-tflite"
+     }
+     ```
+   - Respons memberikan ringkasan rekomendasi tindakan medis.
+2. Pasien Melihat Riwayat Prediksi Mandiri:
+   - `GET /api/v1/predictions/my-history?limit=10`
+   - *Catatan Privasi:* Endpoint ini diproteksi ketat. Dokter maupun Admin dilarang mengakses data prediksi mandiri pasien (403 Forbidden).
+
 ---
 
 ## 📋 6. Ringkasan Status Konsultasi (State Machine)
