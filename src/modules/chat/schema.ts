@@ -1,8 +1,19 @@
 import { z } from "zod";
 
-export const sendMessageSchema = z.object({
-  body: z.string().min(1, "Isi pesan tidak boleh kosong").max(5000, "Pesan maksimal 5000 karakter"),
-});
+export const sendMessageSchema = z
+  .object({
+    body: z.string().optional(),
+    message: z.string().optional(),
+    text: z.string().optional(),
+    content: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      const val = data.body || data.message || data.text || data.content;
+      return typeof val === "string" && val.trim().length > 0;
+    },
+    { message: "Isi pesan tidak boleh kosong" }
+  );
 
 export const markMessagesReadSchema = z.object({
   up_to_message_id: z.string().uuid().optional(),

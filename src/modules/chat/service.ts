@@ -77,7 +77,31 @@ export class ChatService {
       });
     }
 
-    return message;
+    const { data: senderUser } = await supabaseAdmin
+      .from("users")
+      .select("id, full_name, role")
+      .eq("id", senderId)
+      .maybeSingle();
+
+    const role = senderUser?.role || (senderId === consultation.doctor_id ? "doctor" : "patient");
+    const name = senderUser?.full_name || (role === "doctor" ? "Dokter" : "Pasien");
+
+    return {
+      ...message,
+      consultationId: message.consultation_id,
+      sender_id: message.sender_id,
+      senderId: message.sender_id,
+      sender_role: role,
+      senderRole: role,
+      sender_name: name,
+      senderName: name,
+      is_me: true,
+      isMe: true,
+      body: message.body,
+      message: message.body,
+      content: message.body,
+      text: message.body,
+    };
   }
 
   /**
@@ -169,7 +193,7 @@ export class ChatService {
    * Mengambil Riwayat Pesan Chat (GET /consultations/:id/messages)
    */
   static async getMessages(consultationId: string, userId: string, query: GetMessagesQueryInput) {
-    await this.validateAccess(consultationId, userId, false);
+    const consultation = await this.validateAccess(consultationId, userId, false);
 
     const limit = query.limit || 50;
 
@@ -202,7 +226,15 @@ export class ChatService {
     const hasMore = (messages?.length || 0) > limit;
     const items = (messages || []).slice(0, limit).reverse(); // Urutan lama -> baru
 
-    // Tambahkan signed URL untuk pesan bergambar
+    // Ambil info partisipan untuk nama & role pengirim
+    const { data: participants } = await supabaseAdmin
+      .from("users")
+      .select("id, full_name, role")
+      .in("id", [consultation.patient_id, consultation.doctor_id]);
+
+    const participantMap = new Map((participants || []).map((p) => [p.id, p]));
+
+    // Tambahkan signed URL untuk pesan bergambar & metadata lengkap
     const formatted = await Promise.all(
       items.map(async (msg) => {
         let attachmentUrl = null;
@@ -214,16 +246,36 @@ export class ChatService {
           );
         }
 
+        const sender = participantMap.get(msg.sender_id);
+        const role = sender?.role || (msg.sender_id === consultation.doctor_id ? "doctor" : "patient");
+        const name = sender?.full_name || (role === "doctor" ? "Dokter" : "Pasien");
+        const isMe = msg.sender_id === userId;
+
         return {
           id: msg.id,
           consultation_id: msg.consultation_id,
+          consultationId: msg.consultation_id,
           sender_id: msg.sender_id,
+          senderId: msg.sender_id,
+          sender_role: role,
+          senderRole: role,
+          sender_name: name,
+          senderName: name,
+          is_me: isMe,
+          isMe: isMe,
           message_type: msg.message_type,
+          messageType: msg.message_type,
           body: msg.body,
+          message: msg.body,
+          content: msg.body,
+          text: msg.body,
           attachment_url: attachmentUrl,
+          attachmentUrl: attachmentUrl,
           attachment_url_expires_in: attachmentUrl ? 300 : null,
           created_at: msg.created_at,
+          createdAt: msg.created_at,
           read_at: msg.read_at,
+          readAt: msg.read_at,
         };
       })
     );

@@ -7,8 +7,9 @@ export class ChatController {
   static async sendMessage(req: Request, res: Response, next: NextFunction) {
     try {
       const consultationId = req.params.id as string;
-      const { body } = req.body;
-      const data = await ChatService.sendTextMessage(consultationId, req.user!.id, body);
+      const textBody =
+        req.body?.body || req.body?.message || req.body?.text || req.body?.content || "";
+      const data = await ChatService.sendTextMessage(consultationId, req.user!.id, textBody);
       return sendSuccess(res, data, 201);
     } catch (error) {
       next(error);
