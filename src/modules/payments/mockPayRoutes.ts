@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { supabaseAdmin } from "../../lib/supabase.js";
 import { PaymentService } from "./service.js";
+import { env } from "../../config/env.js";
 
 export const mockPayRouter = Router();
 
@@ -74,18 +75,30 @@ mockPayRouter.post("/:consultationId/pay", async (req: Request, res: Response) =
   const invoice = (req.body?.invoice || req.query?.invoice || "") as string;
 
   try {
-    await PaymentService.handleMayarWebhook({
-      event: "payment.received",
-      data: {
-        productId: invoice,
-        status: "SUCCESS",
-        paymentMethod: "QRIS",
-        amount: 55000,
-        extraData: {
-          consultationId,
+    const { data: consultation } = await supabaseAdmin
+      .from("consultations")
+      .select("total_amount")
+      .eq("id", consultationId)
+      .maybeSingle();
+
+    const amount = consultation?.total_amount || 55000;
+
+    await PaymentService.handleMayarWebhook(
+      {
+        event: "payment.received",
+        data: {
+          productId: invoice,
+          status: "SUCCESS",
+          paymentMethod: "QRIS",
+          amount,
+          extraData: {
+            consultationId,
+          },
         },
       },
-    });
+      env.MAYAR_WEBHOOK_SECRET,
+      true
+    );
 
     res.redirect(`/api/v1/mock-pay/${consultationId}?invoice=${invoice}`);
   } catch (err: any) {

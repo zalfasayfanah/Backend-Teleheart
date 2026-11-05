@@ -6,10 +6,10 @@ export class PaymentService {
   /**
    * Menangani Webhook Notifikasi Pembayaran dari Mayar (Idempotent)
    */
-  static async handleMayarWebhook(payload: any, tokenFromRequest?: string) {
+  static async handleMayarWebhook(payload: any, tokenFromRequest?: string, isInternalSimulation = false) {
     // 1. Verifikasi Token Webhook (Keamanan)
     const expectedSecret = env.MAYAR_WEBHOOK_SECRET;
-    if (expectedSecret) {
+    if (!isInternalSimulation && expectedSecret) {
       if (!tokenFromRequest || tokenFromRequest !== expectedSecret) {
         throw new AppError(401, "UNAUTHORIZED_WEBHOOK", "Token webhook Mayar tidak valid");
       }
