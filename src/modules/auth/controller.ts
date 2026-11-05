@@ -60,5 +60,14 @@ export class AuthController {
       next(error);
     }
   }
+
+  static async uploadDocument(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AuthService.uploadDoctorDocument(req.file);
+      return sendSuccess(res, result, 201);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 

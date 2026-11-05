@@ -1,5 +1,7 @@
+import crypto from "crypto";
 import { supabaseAdmin, supabaseAnon } from "../../lib/supabase.js";
 import { encryptNik, hashNik } from "../../lib/crypto.js";
+import { StorageService } from "../../lib/storage.js";
 import { AppError } from "../../middleware/errorHandler.js";
 import {
   RegisterPatientInput,
@@ -329,6 +331,48 @@ export class AuthService {
       email: user.email,
       is_active: user.is_active,
       doctor_verification_status: doctorVerificationStatus,
+    };
+  }
+
+  /**
+   * Mengunggah Berkas Verifikasi Dokter (STR / SIP / Dokumen Penunjang)
+   */
+  static async uploadDoctorDocument(file?: Express.Multer.File) {
+    if (!file) {
+      throw new AppError(400, "FILE_REQUIRED", "Berkas dokumen (field: file) wajib disertakan");
+    }
+
+    const allowedMimes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+    ];
+    if (!allowedMimes.includes(file.mimetype.toLowerCase())) {
+      throw new AppError(
+        400,
+        "UNSUPPORTED_FILE_TYPE",
+        "Format berkas tidak didukung (gunakan PDF, JPG, PNG, atau WEBP)"
+      );
+    }
+
+    const ext = file.originalname.split(".").pop() || "pdf";
+    const fileName = `doc-${crypto.randomUUID()}.${ext}`;
+    const filePath = `doctor-verifications/${fileName}`;
+
+    await StorageService.uploadFile("doctor-documents", filePath, file.buffer, file.mimetype);
+    const downloadUrl = await StorageService.createSignedUrl(
+      "doctor-documents",
+      filePath,
+      3600 * 24 * 7 // Signed URL 7 hari untuk kemudahan verifikasi admin
+    );
+
+    return {
+      file_path: filePath,
+      download_url: downloadUrl,
+      file_name: file.originalname,
+      size_bytes: file.size,
     };
   }
 }

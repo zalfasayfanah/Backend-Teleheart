@@ -44,7 +44,7 @@ export class AdminService {
         if (u.role === "doctor") {
           const { data: dProfile } = await supabaseAdmin
             .from("doctor_profiles")
-            .select("sip_number, str_number, specialization, verification_status, is_online, workplace")
+            .select("sip_number, str_number, specialization, verification_status, is_online, workplace, str_file_path, sip_file_path")
             .eq("user_id", u.id)
             .maybeSingle();
 
