@@ -5,6 +5,7 @@ REST API untuk TeleHeart, platform telehealth konsultasi jantung. Dipakai oleh a
 - Kontrak endpoint: [`docs/API.md`](docs/API.md)
 - Kebutuhan dan alur bisnis: [`docs/PRD.md`](docs/PRD.md)
 - Struktur database: [`docs/ERD.md`](docs/ERD.md)
+- Diagram alur sistem & flowchart: [`docs/FLOWCHART.md`](docs/FLOWCHART.md)
 - Konteks untuk asisten AI: [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md)
 - Panduan & Rencana Pengerjaan: [`rencana_pengerjaan.md`](rencana_pengerjaan.md)
 

@@ -14,6 +14,7 @@ TeleHeart adalah platform telehealth khusus pemeriksaan jantung. Pasien memakai 
 |---|---|---|
 | `docs/PRD.md` | Alur bisnis, aturan bisnis (BR-xx), kebutuhan fungsional (FR-xx), matriks akses | Sebelum membuat logika modul apa pun |
 | `docs/ERD.md` | Skema tabel, enum, relasi, aturan RLS, indeks | Sebelum membuat migration atau query |
+| `docs/FLOWCHART.md` | Diagram alur sistem, sequence diagram & state machine | Untuk memahami visualisasi alur bisnis & arsitektur |
 | `docs/API.md` | Kontrak endpoint, format request/response, kode error | Sebelum membuat route. **Respons harus persis sesuai kontrak** |
 
 Jika ada konflik antar dokumen atau sesuatu tidak jelas, **berhenti dan tanyakan**, jangan menebak. Jika perlu mengubah kontrak API, ubah `docs/API.md` dan catat di Riwayat Perubahan.
