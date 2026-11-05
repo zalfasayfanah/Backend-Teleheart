@@ -13,6 +13,7 @@ Dokumen ini memuat diagram alur (flowchart), sequence diagram, dan diagram state
 6. [Alur Chat Realtime & Pembuatan Resep Digital](#6-alur-chat-realtime--pembuatan-resep-digital)
 7. [State Machine Status Konsultasi](#7-state-machine-status-konsultasi)
 8. [Alur Background Jobs / Schedulers (jobs-tick)](#8-alur-background-jobs--schedulers-jobs-tick)
+9. [Alur Bisnis Pasien: Registrasi hingga Konsultasi Selesai (Patient Journey)](#9-alur-bisnis-pasien-registrasi-hingga-konsultasi-selesai-patient-journey)
 
 ---
 
@@ -332,3 +333,81 @@ flowchart TD
 
   JobStart --> Task1 --> Task2 --> Task3 --> JobEnd(["Selesai & Catat Log Eksekusi"])
 ```
+
+---
+
+## 9. Alur Bisnis Pasien: Registrasi hingga Konsultasi Selesai (Patient Journey)
+
+Diagram di bawah ini menggambarkan perjalanan lengkap seorang pasien (*End-to-End Patient Journey*) mulai dari mendaftar akun, melakukan skrining mandiri, mengisi data klinis tanda vital, menyelesaikan pembayaran, berkonsultasi via chat dengan dokter spesialis jantung, hingga menerima resep obat digital resmi.
+
+```mermaid
+flowchart TD
+  %% Tahap 1: Onboarding Pasien
+  subgraph Phase1["1. Registrasi & Onboarding Pasien (Mobile)"]
+    P1_Start(["Mulai: Buka Aplikasi Flutter"]) --> P1_Reg["Daftar Akun Baru<br/>POST /api/v1/auth/register/patient<br/>(NIK 16 digit, Nama, Tgl Lahir, Gender, Password, Consents)"]
+    P1_Reg --> P1_Login["Login Aplikasi Mobile<br/>POST /api/v1/auth/login<br/>(Header: X-Client-Platform: mobile)"]
+    P1_Login --> P1_Prof["(Opsional) Lengkapi Profil Kesehatan<br/>- Riwayat Penyakit Dahulu<br/>- Alergi Obat / Makanan<br/>- Obat Rutin yang Sedang Dikonsumsi"]
+  end
+
+  %% Tahap 2: Skrining Mandiri AI
+  subgraph Phase2["2. Skrining Mandiri Jantung AI (Opsional / Direkomendasikan)"]
+    P1_Prof --> P2_Screen["Input Data Klinis Skrining:<br/>Usia, BP, Kolesterol, Nyeri Dada, EKG, dll."]
+    P2_Screen --> P2_Model["Prediksi Risiko Lokal on-device (Logistic Regression)"]
+    P2_Model --> P2_Save["Simpan Log Riwayat Prediksi<br/>POST /api/v1/predictions"]
+    P2_Save --> P2_Decision{"Hasil Prediksi Risiko?"}
+    P2_Decision -- "Risiko Tinggi / Sedang" --> P2_Alert["Rekomendasi Utama: Segera Konsultasikan ke Dokter Spesialis Jantung!"]
+    P2_Decision -- "Risiko Rendah" --> P2_Normal["Pasien Tetap Bisa Memilih Konsultasi Preventif"]
+  end
+
+  %% Tahap 3: Pembuatan Konsultasi & Pengisian TTV
+  subgraph Phase3["3. Pembuatan Sesi Konsultasi & Pengisian TTV"]
+    P2_Alert --> P3_Create["Inisiasi Sesi Konsultasi<br/>POST /api/v1/consultations<br/>(Status: 'draft')"]
+    P2_Normal --> P3_Create
+    P3_Create --> P3_Vitals["Wajib: Isi Tanda-Tanda Vital (TTV) Pasien<br/>POST /api/v1/consultations/:id/vitals<br/>- Tekanan Darah (Sistolik & Diastolik)<br/>- Detak Jantung (Heart Rate - bpm)<br/>- Frekuensi Napas (RR - x/menit)<br/>- Suhu Tubuh (°C) & Saturasi O2 (%)<br/>- Keluhan Utama & Catatan Pasien"]
+  end
+
+  %% Tahap 4: Pemilihan Dokter & Pembayaran
+  subgraph Phase4["4. Pilih Dokter, Durasi, & Checkout Pembayaran"]
+    P3_Vitals --> P4_Browse["Lihat Daftar Dokter Online<br/>GET /api/v1/doctors?is_online=true<br/>(Cek Foto, Biaya Tarif, & Spesialisasi)"]
+    P4_Browse --> P4_Checkout["Pilih Dokter & Durasi (15 / 30 Menit)<br/>POST /api/v1/consultations/:id/checkout"]
+    P4_Checkout --> P4_Invoice["Backend Buat Invoice Mayar<br/>(Status Konsultasi: 'waiting_payment')"]
+    P4_Invoice --> P4_Pay["Buka payment_url (Mayar Link)<br/>Pasien Membayar via QRIS / Virtual Account"]
+    P4_Pay --> P4_Webhook["Mayar Kirim Webhook payment.received<br/>Backend Verifikasi Signature & Update Status: 'confirmed'"]
+  end
+
+  %% Tahap 5: Penugasan Dokter & Sesi Konsultasi
+  subgraph Phase5["5. Penugasan Dokter & Pelaksanaan Konsultasi Chat"]
+    P4_Webhook --> P5_Notify["Kirim Notifikasi Tawaran Sesi ke Dokter (FCM)"]
+    P5_Notify --> P5_Accept["Dokter Menerima Konsultasi<br/>POST /api/v1/consultations/:id/accept<br/>(Status Konsultasi: 'in_progress')"]
+    P5_Accept --> P5_Chat["Ruang Chat Konsultasi Dimulai (Supabase Realtime)<br/>- Dokter Meninjau Rekam TTV & Anamnesis Pasien<br/>- Tanya-Jawab Gejala Jantung 1-on-1<br/>- Diskusi Rencana Terapi & Edukasi Gaya Hidup"]
+  end
+
+  %% Tahap 6: Peresepan Obat Digital & Selesai
+  subgraph Phase6["6. Pembuatan Resep Digital & Penyelesaian Sesi"]
+    P5_Chat --> P6_Prescribe["Dokter Menulis Resep Elektronik<br/>POST /api/v1/consultations/:id/prescriptions<br/>(Diagnosis, Obat Jantung, Dosis, Aturan Pakai)"]
+    P6_Prescribe --> P6_GenPDF["Backend Generate PDF Resep Resmi Ber-QR Code<br/>Disimpan ke Supabase Storage Terenkripsi"]
+    P6_GenPDF --> P6_End["Dokter Mengakhiri Sesi<br/>POST /api/v1/consultations/:id/end<br/>(Status Konsultasi: 'completed')"]
+    P6_End --> P6_Download["Pasien Unduh PDF Resep Resmi<br/>GET /api/v1/consultations/:id/prescription"]
+    P6_Download --> Finish(["Selesai: Pasien Mendapatkan Solusi Medis & Resep Obat"])
+  end
+```
+
+---
+
+### Rangkuman Tahapan Perjalanan Pasien (Summary Table)
+
+| Tahap | Aktivitas Pasien | Endpoint API yang Dipanggil | Status Konsultasi |
+| :--- | :--- | :--- | :--- |
+| **1. Registrasi** | Mendaftar akun pasien dengan NIK dan login | `POST /auth/register/patient`<br/>`POST /auth/login` | - |
+| **2. Skrining AI** | Menghitung prediksi risiko jantung on-device | `POST /predictions` | - |
+| **3. Inisiasi Konsultasi** | Membuat sesi konsultasi baru | `POST /consultations` | `draft` |
+| **4. Isi TTV (Vital Signs)**| Memasukkan tensi darah, nadi, suhu, keluhan utama | `POST /consultations/:id/vitals` | `draft` |
+| **5. Pilih Dokter & Durasi**| Memilih dokter spesialis kardiologi yang online | `GET /doctors?is_online=true` | `draft` |
+| **6. Checkout Pembayaran** | Mendapatkan invoice dan link pembayaran Mayar | `POST /consultations/:id/checkout` | `waiting_payment` |
+| **7. Pembayaran Lunas** | Pasien bayar via QRIS / VA (Webhook Mayar) | `POST /payments/mayar-webhook` | `confirmed` / `waiting_doctor` |
+| **8. Dokter Bergabung** | Dokter menerima tawaran konsultasi | `POST /consultations/:id/accept` | `in_progress` |
+| **9. Telekonsultasi** | Chat 1:1 dokter dan pasien secara realtime | Supabase Realtime Channel | `in_progress` |
+| **10. Resep Digital** | Dokter membuat resep obat elektronik | `POST /consultations/:id/prescriptions` | `in_progress` |
+| **11. Selesai** | Dokter menutup sesi, pasien unduh PDF resep | `POST /consultations/:id/end`<br/>`GET /consultations/:id/prescription` | `completed` |
+
+
