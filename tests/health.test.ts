@@ -21,5 +21,51 @@ describe("Health Check API", () => {
     expect(res.body.error.code).toBe("NOT_FOUND");
     expect(res.body.error.message).toContain("tidak ditemukan");
   });
+
+  describe("CORS Configuration Tests", () => {
+    it("Mengizinkan preflight OPTIONS dari Flutter dev server (http://localhost:65378)", async () => {
+      const res = await request(app)
+        .options("/api/v1/auth/login")
+        .set("Origin", "http://localhost:65378")
+        .set("Access-Control-Request-Method", "POST")
+        .set(
+          "Access-Control-Request-Headers",
+          "Content-Type, Authorization, X-Client-Platform"
+        );
+
+      expect(res.status).toBe(204);
+      expect(res.headers["access-control-allow-origin"]).toBe("http://localhost:65378");
+      expect(res.headers["access-control-allow-credentials"]).toBe("true");
+      expect(res.headers["access-control-allow-methods"]).toContain("POST");
+      expect(res.headers["access-control-allow-methods"]).toContain("OPTIONS");
+      expect(res.headers["access-control-allow-headers"]).toContain("X-Client-Platform");
+    });
+
+    it("Mengizinkan preflight OPTIONS dari domain staging Netlify", async () => {
+      const res = await request(app)
+        .options("/api/v1/auth/login")
+        .set("Origin", "https://teleheart-frontend.netlify.app")
+        .set("Access-Control-Request-Method", "POST")
+        .set(
+          "Access-Control-Request-Headers",
+          "Content-Type, Authorization, X-Client-Platform"
+        );
+
+      expect(res.status).toBe(204);
+      expect(res.headers["access-control-allow-origin"]).toBe(
+        "https://teleheart-frontend.netlify.app"
+      );
+    });
+
+    it("Menyematkan header CORS pada request aktual", async () => {
+      const res = await request(app)
+        .get("/api/v1/health")
+        .set("Origin", "http://localhost:65378");
+
+      expect(res.status).toBe(200);
+      expect(res.headers["access-control-allow-origin"]).toBe("http://localhost:65378");
+      expect(res.headers["access-control-allow-credentials"]).toBe("true");
+    });
+  });
 });
 

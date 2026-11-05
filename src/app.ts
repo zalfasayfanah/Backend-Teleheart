@@ -26,17 +26,56 @@ import { sendError } from "./lib/response.js";
 
 const app = express();
 
-// Middleware dasar
-const allowedOrigins = env.CORS_ALLOWED_ORIGINS === "*"
-  ? "*"
-  : env.CORS_ALLOWED_ORIGINS.split(",").map((origin) => origin.trim());
+// Middleware dasar: Konfigurasi CORS Komprehensif (Flutter Web, Mobile, Portal Dokter)
+const configuredOrigins = env.CORS_ALLOWED_ORIGINS === "*"
+  ? ["*"]
+  : env.CORS_ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean);
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
+const isOriginAllowed = (origin: string | undefined): boolean => {
+  // 1. Izinkan request tanpa header origin (mobile native apps, Postman, server-to-server)
+  if (!origin) return true;
+
+  // 2. Jika disetel wildcard '*'
+  if (configuredOrigins.includes("*")) return true;
+
+  // 3. Izinkan localhost & 127.0.0.1 dengan port berapa pun (Flutter Web, Vite, React, Next.js dev server)
+  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+  if (isLocalhost) return true;
+
+  // 4. Izinkan domain yang terdaftar di environment variable CORS_ALLOWED_ORIGINS
+  if (configuredOrigins.includes(origin)) return true;
+
+  // 5. Izinkan domain staging Netlify / Vercel
+  if (/^https:\/\/.*\.netlify\.app$/.test(origin) || /^https:\/\/.*\.vercel\.app$/.test(origin)) {
+    return true;
+  }
+
+  return false;
+};
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    callback(null, isOriginAllowed(origin));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Client-Platform",
+    "X-Requested-With",
+    "Accept",
+    "Origin",
+    "x-jobs-secret",
+    "x-mayar-signature",
+  ],
+  exposedHeaders: ["Content-Disposition", "Content-Type", "Authorization"],
+  optionsSuccessStatus: 204,
+  maxAge: 86400, // Cache preflight selama 24 jam untuk performa browser
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
