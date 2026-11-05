@@ -94,10 +94,13 @@ export class MayarClient {
 
   private generateMockInvoice(params: CreateMayarInvoiceParams): MayarInvoiceResponse {
     const mockId = `mock_inv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const baseUrl =
+      process.env.PUBLIC_API_URL ||
+      (env.APP_BASE_URL?.startsWith("https://") ? env.APP_BASE_URL : "https://backend-teleheart.netlify.app");
     return {
       id: mockId,
       transactionId: `mock_tx_${Date.now()}`,
-      paymentUrl: `http://localhost:${env.PORT}/api/v1/mock-pay/${params.consultationId}?invoice=${mockId}`,
+      paymentUrl: `${baseUrl}/api/v1/mock-pay/${params.consultationId}?invoice=${mockId}`,
       expiredAt: new Date(Date.now() + env.PAYMENT_INVOICE_TTL_MINUTES * 60 * 1000).toISOString(),
     };
   }
