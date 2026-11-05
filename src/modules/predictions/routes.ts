@@ -10,6 +10,7 @@ predictionRouter.use(authMiddleware);
 predictionRouter.use(requireRole("patient"));
 
 predictionRouter.post("/", PredictionController.save);
+predictionRouter.get("/", PredictionController.getMyHistory);
 predictionRouter.get("/my-history", PredictionController.getMyHistory);
 
 export default predictionRouter;

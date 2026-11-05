@@ -144,8 +144,19 @@ describe("Heart Risk Prediction Logs Module Tests (Fase 10)", () => {
     });
   });
 
-  describe("Akses Riwayat Prediksi Mandiri (GET /predictions/my-history)", () => {
-    it("Pasien dapat melihat riwayat prediksi risiko jantung miliknya (200)", async () => {
+  describe("Akses Riwayat Prediksi Mandiri (GET /predictions & /predictions/my-history)", () => {
+    it("Pasien dapat melihat riwayat prediksi risiko jantung miliknya via /predictions (200)", async () => {
+      const res = await request(app)
+        .get("/api/v1/predictions?limit=10")
+        .set("Authorization", `Bearer ${patientToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toBeInstanceOf(Array);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(2);
+      expect(res.body.meta?.total).toBeGreaterThanOrEqual(2);
+    });
+
+    it("Pasien dapat melihat riwayat prediksi risiko jantung miliknya via /predictions/my-history (200)", async () => {
       const res = await request(app)
         .get("/api/v1/predictions/my-history?limit=10")
         .set("Authorization", `Bearer ${patientToken}`);
