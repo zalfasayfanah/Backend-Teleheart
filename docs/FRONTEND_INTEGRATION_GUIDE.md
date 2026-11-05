@@ -91,21 +91,120 @@ Authorization: Bearer <access_token>
 
 ### Flow 3: Cari Dokter Spesialis Jantung
 1. Pasien membuka halaman daftar dokter: `GET /api/v1/doctors`.
+   - Query params opsional: `?q=siti` (pencarian nama), `?page=1&limit=20`.
    - Hanya dokter yang **terverifikasi admin** dan sedang **online** (`is_online = true`) yang muncul.
-   - Respons sudah menyertakan daftar paket durasi (15, 30, 60 menit) beserta kalkulasi total biaya (tarif dokter + tarif platform).
+   - Contoh Response JSON (200 OK):
+     ```json
+     {
+       "data": [
+         {
+           "id": "e4582baa-b1f0-4c1c-a527-b9350d5d6c7f",
+           "full_name": "dr. Siti Sp.JP",
+           "specialization": "Spesialis Jantung dan Pembuluh Darah",
+           "workplace": "RS Jantung Harapan",
+           "photo_url": null,
+           "is_available": true,
+           "prices": [
+             {
+               "duration_minutes": 15,
+               "doctor_price": 50000,
+               "platform_fee": 5000,
+               "total_price": 55000
+             },
+             {
+               "duration_minutes": 30,
+               "doctor_price": 90000,
+               "platform_fee": 5000,
+               "total_price": 95000
+             }
+           ]
+         }
+       ],
+       "meta": { "page": 1, "limit": 20, "total": 1 }
+     }
+     ```
+2. Detail Profil Dokter Berdasarkan ID: `GET /api/v1/doctors/:id`.
+   - Contoh Response JSON (200 OK):
+     ```json
+     {
+       "data": {
+         "id": "e4582baa-b1f0-4c1c-a527-b9350d5d6c7f",
+         "full_name": "dr. Siti Sp.JP",
+         "specialization": "Spesialis Jantung dan Pembuluh Darah",
+         "workplace": "RS Jantung Harapan",
+         "bio": "Dokter spesialis jantung dengan keahlian aritmia.",
+         "photo_url": null,
+         "is_online": true,
+         "is_available": true,
+         "prices": [ ... ]
+       }
+     }
+     ```
 
 ### Flow 4: Pembuatan Konsultasi & Pengisian Tanda Vital
 1. Pasien memilih dokter & durasi: `POST /api/v1/consultations`.
-   - Status awal konsultasi: `"draft"`.
+   - Headers: `Authorization: Bearer <patient_token>`, `Content-Type: application/json`.
+   - Body JSON:
+     ```json
+     {
+       "doctor_id": "e4582baa-b1f0-4c1c-a527-b9350d5d6c7f",
+       "duration_minutes": 15,
+       "complaint": "Dada terasa sesak dan berdebar"
+     }
+     ```
+   - Contoh Response JSON (201 Created):
+     ```json
+     {
+       "data": {
+         "id": "cce8473e-2a37-4494-aa91-699edf99879a",
+         "patient_id": "01a2d5ac-1f86-4761-a5c2-28acc27596a9",
+         "doctor_id": "e4582baa-b1f0-4c1c-a527-b9350d5d6c7f",
+         "status": "draft",
+         "duration_minutes": 15,
+         "complaint": "Dada terasa sesak dan berdebar",
+         "created_at": "2026-11-05T10:00:00.000Z"
+       }
+     }
+     ```
 2. Pasien mengisi tensi dan denyut nadi: `POST /api/v1/consultations/:id/vitals`.
+   - Headers: `Authorization: Bearer <patient_token>`.
+   - Body JSON:
+     ```json
+     {
+       "systolic": 130,
+       "diastolic": 85,
+       "heart_rate": 84,
+       "spo2": 98,
+       "symptoms": ["chest_pain", "palpitations"]
+     }
+     ```
    - Backend memiliki **Early Warning System (EWS)** cerdas:
      - Jika tensi normal: `overall_status: "normal"`, `is_emergency: false`.
      - Jika krisis hipertensi / SpO2 rendah: `overall_status: "critical"`, `is_emergency: true` (Frontend bisa menampilkan pop-up peringatan IGD).
 
 ### Flow 5: Checkout & Pembayaran Mayar
 1. Pasien menekan tombol "Bayar Sekarang": `POST /api/v1/consultations/:id/checkout`.
+   - Headers: `Authorization: Bearer <patient_token>`.
+   - Body JSON:
+     ```json
+     {
+       "doctor_id": "e4582baa-b1f0-4c1c-a527-b9350d5d6c7f",
+       "duration_minutes": 15
+     }
+     ```
    - Backend memanggil gateway pembayaran **Mayar**.
-   - Respons memberikan `payment_url` dan `mayar_invoice_id`.
+   - Contoh Response JSON (200 OK):
+     ```json
+     {
+       "data": {
+         "payment_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+         "mayar_invoice_id": "inv_12345678",
+         "payment_url": "https://pub-checkout.mayar.club/pl/inv_12345678",
+         "total_amount": 55000,
+         "status": "waiting_payment"
+       }
+     }
+     ```
    - Status konsultasi berubah menjadi `"waiting_payment"`.
 2. Frontend membuka WebView atau browser eksternal mengarah ke `payment_url`.
 3. Pasien membayar via QRIS, Virtual Account, dsb.
@@ -217,7 +316,33 @@ Sesuai aturan keamanan & privasi medis (PRD): model AI machine learning risiko k
      ```
    - Respons memberikan ringkasan rekomendasi tindakan medis.
 2. Pasien Melihat Riwayat Prediksi Mandiri:
-   - `GET /api/v1/predictions/my-history?limit=10`
+   - `GET /api/v1/predictions?limit=10` atau `GET /api/v1/predictions/my-history?limit=10`
+   - Headers: `Authorization: Bearer <patient_token>`
+   - Contoh Response JSON (200 OK):
+     ```json
+     {
+       "data": [
+         {
+           "id": "f84562a4-97f7-41ab-8c3f-475bfe97760a",
+           "patient_id": "01a2d5ac-1f86-4761-a5c2-28acc27596a9",
+           "result": "at_risk",
+           "model_version": "lr-v1",
+           "created_at": "2026-11-05T09:38:50.515865+00:00",
+           "age": 48,
+           "male": true,
+           "current_smoker": true,
+           "cigs_per_day": 12,
+           "sys_bp": 142.0,
+           "dia_bp": 92.0,
+           "total_cholesterol": 230.0,
+           "heart_rate": 84.0,
+           "glucose": 110.0,
+           "bmi": 26.4
+         }
+       ],
+       "meta": { "total": 1, "page": 1, "limit": 10 }
+     }
+     ```
    - *Catatan Privasi:* Endpoint ini diproteksi ketat. Dokter maupun Admin dilarang mengakses data prediksi mandiri pasien (403 Forbidden).
 
 ### Flow 11: Portal Khusus Admin & Audit Trail (Fase 11)
