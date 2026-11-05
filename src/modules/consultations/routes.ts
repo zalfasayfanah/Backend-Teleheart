@@ -71,6 +71,12 @@ consultationRouter.post(
   validate({ body: closeConsultationSchema }),
   ConsultationController.closeConsultation
 );
+consultationRouter.post(
+  "/:id/end",
+  requireRole("doctor"),
+  validate({ body: closeConsultationSchema }),
+  ConsultationController.closeConsultation
+);
 
 // Pasien / Dokter melihat daftar konsultasi
 consultationRouter.get("/", ConsultationController.getConsultations);
