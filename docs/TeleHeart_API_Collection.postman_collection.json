@@ -70,6 +70,24 @@
           }
         },
         {
+          "name": "1b. Upload Dokumen STR/SIP Dokter",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "File dokumen STR/SIP (.pdf, .jpg, .png, maks 10MB)"
+                }
+              ]
+            },
+            "url": "{{base_url}}/auth/upload-document"
+          }
+        },
+        {
           "name": "2. Registrasi Dokter Baru",
           "request": {
             "method": "POST",
@@ -81,7 +99,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"full_name\": \"dr. Siti Sp.JP\",\n  \"email\": \"dr.siti@teleheart.id\",\n  \"password\": \"password123\",\n  \"str_number\": \"STR-1234567890\",\n  \"sip_number\": \"SIP-1234567890\",\n  \"specialization\": \"Spesialis Jantung dan Pembuluh Darah\",\n  \"workplace\": \"RS Jantung Harapan\",\n  \"consents\": [\n    { \"consent_type\": \"privacy_policy\", \"version\": \"1.0\" },\n    { \"consent_type\": \"medical_data_processing\", \"version\": \"1.0\" }\n  ]\n}"
+              "raw": "{\n  \"full_name\": \"dr. Siti Sp.JP\",\n  \"email\": \"dr.siti@teleheart.id\",\n  \"password\": \"password123\",\n  \"str_number\": \"STR-1234567890\",\n  \"sip_number\": \"SIP-1234567890\",\n  \"specialization\": \"Spesialis Jantung dan Pembuluh Darah\",\n  \"workplace\": \"RS Jantung Harapan\",\n  \"str_file_path\": \"str/str_contoh.pdf\",\n  \"sip_file_path\": \"sip/sip_contoh.pdf\",\n  \"consents\": [\n    { \"consent_type\": \"privacy_policy\", \"version\": \"1.0\" },\n    { \"consent_type\": \"medical_data_processing\", \"version\": \"1.0\" }\n  ]\n}"
             },
             "url": "{{base_url}}/auth/register/doctor"
           }
